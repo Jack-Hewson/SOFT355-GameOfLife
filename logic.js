@@ -3,8 +3,13 @@ var db = require("./db");
 
 function randomBoard() {
     var board = new Array();
+    height = 20;
+    width = 28;
 
-    return board = [1, 2, 3, 4, 5];
+    for (var x = 0; x < height * width; x++) {
+        board[x] = Math.round(Math.random());
+    }
+    return board;
 }
 
 async function newGame() {
@@ -12,12 +17,25 @@ async function newGame() {
     var board = randomBoard();
     
     var game = new schemas.Board({
-        layout: [1,2,3,4,5]
+        layout: board
     });
-    console.log(game);
+
+    //console.log(game);
     await game.save();
-    console.log("saved");
+    //console.log("saved");
     return game;
 }
 
+async function saveLayout(gameId, layout) {
+    //console.log("THIS IS THE LAYOUT " + layout);
+    var game = await db.getBoard(gameId);
+    //console.log(game);
+    game.layout = randomBoard();
+
+    await game.save();
+    //console.log("UPDATED LAYOUT " + game.layout);
+    return game;
+}
+
+module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;

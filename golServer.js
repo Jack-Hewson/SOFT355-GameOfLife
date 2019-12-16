@@ -20,33 +20,44 @@ app.get("/newgame", async function (request, response) {
     var board = await logic.newGame();
     console.log("Created a new game: " + board._id);
     response.contentType("application/json");
-    response.send({ "gameId": board._id });
+    response.send({ "gameId": board._id, "layout": board.layout});
 })
 
 // Initialise a HTTP server using the Express app.
 var server = http.createServer(app);
 // Initialise the web socket instance.
 var wss = new WebSocketServer({ httpServer: server });
+var connection;
 
-wss.on("request", function(request) {
+wss.on("request", function (request) {
     console.log("Received request");
     // Store the connection in a variable.
-    var connection = request.accept(null, request.origin);
-    console.log("connection: " + connection);
+    connection = request.accept(null, request.origin);
+    //console.log("connection: " + connection);
 
     // Set up the message event handler.
-    connection.on("message", function(message) {
-        console.log("Received a message");
-        console.log("Received: " + message.utf8Data);
-    });
+    connection.on("message", async function (message) {
+        //console.log("Received a message");
+        //console.log("Received: " + message.utf8Data);
+        var obj = JSON.parse(message.utf8Data);
+        var board;
+        //console.log(obj._id);
 
-    // Send a message to the client.
-    connection.sendUTF("Hello world from the server!");
+        if ("layout" in obj) {
+            console.log("Old layout " + obj.layout);
+            board = await logic.saveLayout(obj._id, obj.layout);
+            console.log("SERVER UPDATED " + board);
+            connection.send(JSON.stringify({
+                _id: board._id,
+                layout: board.layout
+            }))
+        }
+    });
 })
 
 server.listen(port, async function() {
-    // Connect to Mongoose.
     await mongoose.connect(uri, {
+    // Connect to Mongoose.
         useNewUrlParser: true,
         useUnifiedTopology: true
     });

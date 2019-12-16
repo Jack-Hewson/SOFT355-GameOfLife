@@ -7,8 +7,9 @@ async function getPlayer(name) {
     await schemas.Player.findOne({"name": name})
 }
 
-async function getBoard(id) {e
-    await schemas.Board.findOne({ _id: id });
+async function getBoard(id) {
+    //console.log("DB " + id);
+    return await schemas.Board.findOne({ _id: id });
 }
 
 module.exports.getPlayer = getPlayer;
