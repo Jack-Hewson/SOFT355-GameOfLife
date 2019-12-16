@@ -23,6 +23,16 @@ app.get("/newgame", async function (request, response) {
     response.send({ "gameId": board._id, "layout": board.layout});
 })
 
+app.get("/nextTurn/:gameId/:layout", async function (request, response) {
+    var gameId = request.params.gameId;
+    var layout = request.params.layout;
+    console.log("RECEIVED LAYOUT: " + layout);
+
+    var board = await logic.saveLayout(gameId, layout);
+    response.contentType("application/json");
+    response.send({ "gameId": board._id, "layout": board.layout });
+})
+
 // Initialise a HTTP server using the Express app.
 var server = http.createServer(app);
 // Initialise the web socket instance.
@@ -44,7 +54,7 @@ wss.on("request", function (request) {
         //console.log(obj._id);
 
         if ("layout" in obj) {
-            console.log("Old layout " + obj.layout);
+            //console.log("Old layout " + obj.layout);
             board = await logic.saveLayout(obj._id, obj.layout);
             console.log("SERVER UPDATED " + board);
             connection.send(JSON.stringify({

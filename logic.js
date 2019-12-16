@@ -12,6 +12,25 @@ function randomBoard() {
     return board;
 }
 
+function convert1D(layout) {
+    var board = new Array();
+    height = 20;
+    width = 28;
+
+    for (var x = 0; x < layout.length; x++) {
+        //for (var y = 0; y < width; y++) {
+        board = board.concat(layout[x]);
+        //}
+    }
+
+
+    //for (var x = 0; x < height * width; x++) {
+    //    console.log("layout[" + x + "] =" + layout[x, 1]);
+    //    board[x] = layout[x];
+    //}
+    return board;
+}
+
 async function newGame() {
     //generate a random grid
     var board = randomBoard();
@@ -29,8 +48,9 @@ async function newGame() {
 async function saveLayout(gameId, layout) {
     //console.log("THIS IS THE LAYOUT " + layout);
     var game = await db.getBoard(gameId);
-    //console.log(game);
-    game.layout = randomBoard();
+    
+    game.layout = convert1D(layout);
+    //console.log("LOGIC LAYOUT " + game.layout);
 
     await game.save();
     //console.log("UPDATED LAYOUT " + game.layout);

@@ -13,14 +13,27 @@ function GameOfLife() {
 
     }
     this.initLoad = function (width, height, layout) {
-        this.board = new Array(height);
-        for (var x = 0; x < height; x++) {
-            this.board[x] = new Array(width);
-            for (var y = 0; y < width; y++) {
-                console.log(layout[(x + 1) * (y + 1)]);
-                this.board[x][y] = layout[(x+1)*(y+1)];
+        this.board = [];
+
+        var i, k;
+
+        for (i = 0, k = -1; i < layout.length; i++) {
+            if (i % width === 0) {
+                k++;
+                this.board[k] = [];
             }
+            this.board[k].push(layout[i]);
         }
+        //return matrix;
+
+        //this.board = new Array(height);
+        //for (var x = 0; x < height; x++) {
+        //    this.board[x] = new Array(width);
+        //    for (var y = 0; y < width; y++) {
+        //        console.log(layout[(x + 1) * (y + 1)]);
+        //        this.board[x][y] = layout[(x+1)*(y+1)];
+        //    }
+        //}
     }
 
     this.print = function (ctx, w, h) {
@@ -77,10 +90,26 @@ gameModule.component("game", {
         //Initialise the websocket connection
         var socket = new WebSocket("ws://localhost:9000/");
         var layout;
+        
+        var canvas = new GameOfLife();
 
         socket.onmessage = function (event) {
-            var obj = JSON.parse(event.data)
-            console.log("Message from server: '" + obj._id + "'");
+            var eventObject = JSON.parse(event.data)
+            console.log(eventObject.layout);
+            if ("layout" in eventObject) {
+                var width = document.getElementById("canvas").width;
+                var height = document.getElementById("canvas").height
+                var gridRows = Math.round(width / 25);
+                var gridCol = Math.round(height / 25);
+                canvas.initLoad(gridRows, gridCol, eventObject.layout);
+                canvas.canvas = document.getElementById('canvas');
+                canvas.ctx = canvas.canvas.getContext('2d');
+                console.log(canvas.ctx);
+                //canvas.board = layout;
+                canvas.print(canvas.ctx, 25, 25);
+            }
+
+            console.log("Message from server: '" + eventObject._id + "'");
         }
 
         //Add functions to the scope
@@ -91,7 +120,7 @@ gameModule.component("game", {
                 console.log(response.data["layout"]);
 
                 //socket.send("Hello world from the angularJS client: gameId is '" + response.data["layout"] + "'");
-                var canvas = new GameOfLife();
+                
                 var startActive = 0;
                 var squareLength = 25;
                 var set;
@@ -106,6 +135,7 @@ gameModule.component("game", {
                 canvas.ctx = canvas.canvas.getContext('2d');
                 //console.log(canvas.ctx);
                 //canvas.board = layout;
+                console.log("Canvas board " + canvas.board);
                 canvas.print(canvas.ctx, squareLength, squareLength);
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
@@ -113,13 +143,32 @@ gameModule.component("game", {
                 });
                 //console.log(canvas.board)
 
-                socket.send(JSON.stringify({
-                    _id: response.data["gameId"],
-                    layout: canvas.board
-                }))
+
 
                 //socket.send("New layout is " + canvas.board);
             });
+        }
+
+        $scope.nextTurn = function () {
+            $("#next").attr("disable", true);
+            var gameId = $("#gameId").html();
+            var layout = canvas.board;
+
+            //var uri = "/nextTurn/" + gameId + "/" + layout;
+
+            //$http.get(uri).then(function (response) {
+            //    console.log(response);
+            //})
+            console.log("game.js " + layout);
+
+            socket.send(JSON.stringify({
+                _id: $("#gameId").html(),
+                layout: canvas.board
+            }))
+
+
+
+            //console.log("NEXT TURN" + eventObject._id);
         }
     }
 })
