@@ -38,17 +38,16 @@ var server = http.createServer(app);
 // Initialise the web socket instance.
 var wss = new WebSocketServer({ httpServer: server });
 var connection;
-
+var clients = [];
 wss.on("request", function (request) {
+    
     console.log("Received request");
     // Store the connection in a variable.
     connection = request.accept(null, request.origin);
-    //console.log("connection: " + connection);
-
+    clients.push(connection);
+    //console.log(clients);
     // Set up the message event handler.
     connection.on("message", async function (message) {
-        //console.log("Received a message");
-        //console.log("Received: " + message.utf8Data);
         var obj = JSON.parse(message.utf8Data);
         var board;
         //console.log(obj._id);
@@ -57,10 +56,21 @@ wss.on("request", function (request) {
             //console.log("Old layout " + obj.layout);
             board = await logic.saveLayout(obj._id, obj.layout);
             console.log("SERVER UPDATED " + board);
-            connection.send(JSON.stringify({
-                _id: board._id,
-                layout: board.layout
-            }))
+
+            clients.forEach(function each(client) {
+                    client.send(JSON.stringify({
+                        _id: board._id,
+                        layout: board.layout
+                    }))
+            })
+
+            //clients.forEach(function (client) {
+            //    console.log(client);
+            //    client.send(JSON.stringify({
+            //        //_id: board._id,
+            //        layout: board.layout
+            //    }))
+            //})
         }
     });
 })

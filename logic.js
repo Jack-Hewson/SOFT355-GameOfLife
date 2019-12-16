@@ -33,15 +33,17 @@ function convert1D(layout) {
 
 async function newGame() {
     //generate a random grid
-    var board = randomBoard();
-    
-    var game = new schemas.Board({
-        layout: board
-    });
-
-    //console.log(game);
-    await game.save();
+    //var board = randomBoard();
+    //
+    //var game = new schemas.Board({
+    //    layout: board
+    //});
+    //
+    ////console.log(game);
+    //await game.save();
     //console.log("saved");
+    var game = await db.getBoard("5df7c65d57bba34d2ce08056");
+
     return game;
 }
 

@@ -97,6 +97,7 @@ gameModule.component("game", {
             var eventObject = JSON.parse(event.data)
             console.log(eventObject.layout);
             if ("layout" in eventObject) {
+                console.log("MESSAGE FROM SERVER RECEIVED");
                 var width = document.getElementById("canvas").width;
                 var height = document.getElementById("canvas").height
                 var gridRows = Math.round(width / 25);
@@ -142,9 +143,6 @@ gameModule.component("game", {
                     getMousePosition(canvas, e);
                 });
                 //console.log(canvas.board)
-
-
-
                 //socket.send("New layout is " + canvas.board);
             });
         }
@@ -165,10 +163,6 @@ gameModule.component("game", {
                 _id: $("#gameId").html(),
                 layout: canvas.board
             }))
-
-
-
-            //console.log("NEXT TURN" + eventObject._id);
         }
     }
 })
