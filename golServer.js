@@ -16,11 +16,27 @@ app.get("/", function (request, response) {
     response.status(200).sendFile("/", { root: "client" });
 });
 
+app.get("/initgame", async function (request, response) {
+    var boards = await db.getBoard({ "name": "public" });
+    console.log(boards.layout);
+    response.contentType("application/json");
+    response.send({ "gameId": boards._id, "layout": boards.layout });
+    //var id = [];
+    //boards.forEach(function (t) {
+    //    id.push(t);
+    //})
+    //console.log(id);
+    //response.contentType("application/json");
+    //response.send({ "gameId": boards._id, "layout": boards.layout });
+})
+
 app.get("/newgame", async function (request, response) {
     var board = await logic.newGame();
     console.log("Created a new game: " + board._id);
     response.contentType("application/json");
     response.send({ "gameId": board._id, "layout": board.layout});
+    //var boards = await db.getBoards();
+    //console.log("BOARDS: " + boards);
 })
 
 app.get("/nextTurn/:gameId/:layout", async function (request, response) {

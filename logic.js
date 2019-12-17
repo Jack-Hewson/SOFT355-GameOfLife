@@ -33,23 +33,23 @@ function convert1D(layout) {
 
 async function newGame() {
     //generate a random grid
-    //var board = randomBoard();
-    //
-    //var game = new schemas.Board({
-    //    layout: board
-    //});
-    //
-    ////console.log(game);
-    //await game.save();
-    //console.log("saved");
-    var game = await db.getBoard("5df7c65d57bba34d2ce08056");
+    var board = randomBoard();
+    
+    var game = new schemas.Board({
+        layout: board
+    });
+    
+    //console.log(game);
+    await game.save();
+    console.log("saved");
+    //var game = await db.getBoard("5df7c65d57bba34d2ce08056");
 
     return game;
 }
 
 async function saveLayout(gameId, layout) {
-    //console.log("THIS IS THE LAYOUT " + layout);
-    var game = await db.getBoard(gameId);
+    console.log("THIS IS THE LAYOUT " + layout);
+    var game = await db.getBoard({ "_id": gameId });
     
     game.layout = convert1D(layout);
     //console.log("LOGIC LAYOUT " + game.layout);

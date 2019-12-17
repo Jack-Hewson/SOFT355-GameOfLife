@@ -1,5 +1,6 @@
 var gameModule = angular.module("game", ["ngRoute"]);
 
+
 function GameOfLife() {
 
     this.initEmpty = function (width, height) {
@@ -83,13 +84,26 @@ function determineXY(c, x, y) {
     c.print(c.ctx, 25, 25);
 }
 
+function processCanvas(canvas, layout) {
+    var width = document.getElementById("canvas").width;
+    var height = document.getElementById("canvas").height
+    var gridRows = Math.round(width / 25);
+    var gridCol = Math.round(height / 25);
+    canvas.initLoad(gridRows, gridCol, layout);
+    canvas.canvas = document.getElementById('canvas');
+    canvas.ctx = canvas.canvas.getContext('2d');
+    console.log(canvas.ctx);
+    //canvas.board = layout;
+    canvas.print(canvas.ctx, 25, 25);
+    return canvas;
+}
+
 gameModule.component("game", {
     templateUrl: "components/game/game.template.html",
 
     controller: function GameController($scope, $http) {
         //Initialise the websocket connection
         var socket = new WebSocket("ws://localhost:9000/");
-        var layout;
         
         var canvas = new GameOfLife();
 
@@ -98,16 +112,7 @@ gameModule.component("game", {
             console.log(eventObject.layout);
             if ("layout" in eventObject) {
                 console.log("MESSAGE FROM SERVER RECEIVED");
-                var width = document.getElementById("canvas").width;
-                var height = document.getElementById("canvas").height
-                var gridRows = Math.round(width / 25);
-                var gridCol = Math.round(height / 25);
-                canvas.initLoad(gridRows, gridCol, eventObject.layout);
-                canvas.canvas = document.getElementById('canvas');
-                canvas.ctx = canvas.canvas.getContext('2d');
-                console.log(canvas.ctx);
-                //canvas.board = layout;
-                canvas.print(canvas.ctx, 25, 25);
+                processCanvas(canvas,eventObject.layout);
             }
 
             console.log("Message from server: '" + eventObject._id + "'");
@@ -115,33 +120,31 @@ gameModule.component("game", {
 
         //Add functions to the scope
         $scope.initGame = function () {
-            //Initialise a new game
-            $http.get("/newgame").then(function (response) {
+            $http.get("/initgame").then(function (response) {
+                console.log(response);
+                $("#openBoards").html(response.data["gameId"]);
                 $("#gameId").html(response.data["gameId"]);
-                console.log(response.data["layout"]);
-
-                //socket.send("Hello world from the angularJS client: gameId is '" + response.data["layout"] + "'");
-                
-                var startActive = 0;
-                var squareLength = 25;
-                var set;
-                var width = document.getElementById("canvas").width;
-                var height = document.getElementById("canvas").height
-                var gridRows = Math.round(width / squareLength);
-                var gridCol = Math.round(height / squareLength);
-
-                //Generates an initial matrix of 0s only
-                canvas.initLoad(gridRows, gridCol, response.data["layout"]);
-                canvas.canvas = document.getElementById('canvas');
-                canvas.ctx = canvas.canvas.getContext('2d');
-                //console.log(canvas.ctx);
-                //canvas.board = layout;
-                console.log("Canvas board " + canvas.board);
-                canvas.print(canvas.ctx, squareLength, squareLength);
+                canvas = processCanvas(canvas, response.data["layout"]);
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
                     getMousePosition(canvas, e);
                 });
+            })
+
+
+           
+        }
+
+        $scope.newGame = function () {
+            //Initialise a new game
+            $http.get("/newgame").then(function (response) {
+                $("#gameId").html(response.data["gameId"]);
+                //console.log(response.data["layout"]);
+
+                //socket.send("Hello world from the angularJS client: gameId is '" + response.data["layout"] + "'");
+                processCanvas(canvas,response.data["layout"]);
+
+                
                 //console.log(canvas.board)
                 //socket.send("New layout is " + canvas.board);
             });
@@ -149,15 +152,13 @@ gameModule.component("game", {
 
         $scope.nextTurn = function () {
             $("#next").attr("disable", true);
-            var gameId = $("#gameId").html();
             var layout = canvas.board;
-
+            console.log("CANVAS " + layout);
             //var uri = "/nextTurn/" + gameId + "/" + layout;
 
             //$http.get(uri).then(function (response) {
             //    console.log(response);
             //})
-            console.log("game.js " + layout);
 
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
