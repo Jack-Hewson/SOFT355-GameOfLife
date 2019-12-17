@@ -48,7 +48,7 @@ async function newGame() {
 }
 
 async function saveLayout(gameId, layout) {
-    console.log("THIS IS THE LAYOUT " + layout);
+    //console.log("THIS IS THE LAYOUT " + layout);
     var game = await db.getBoard({ "_id": gameId });
     
     game.layout = convert1D(layout);
@@ -59,5 +59,43 @@ async function saveLayout(gameId, layout) {
     return game;
 }
 
+async function nextGen(layout) {
+    console.log("Calculating next generation");
+    
+    boardNext = new Array(layout.length);
+
+    for (var i = 0; i < layout.length; i++) {
+        boardNext[i] = new Array(layout[i].length);
+    }
+
+    for (var x = 0; x < layout.length; x++) {
+        for (var y = 0; y < layout[x].length; y++) {
+            var n = 0;
+            for (var dx = -1; dx <= 1; dx++) {
+                for (var dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) { }
+                    else if (typeof layout[x + dx] !== 'undefined' && typeof layout[x + dx][y + dy] !== 'undefined' && layout[x + dx][y + dy]) {
+                        n++;
+                    }
+                }
+            }
+            var currentBlock = layout[x][y];
+
+            if (n == 0 || n == 1)
+                currentBlock = 0;
+            else if (n == 2) { }
+            else if (n == 3)
+                currentBlock = 1;
+            else
+                currentBlock = 0;
+
+            boardNext[x][y] = currentBlock;
+        }
+    }
+
+    return boardNext;
+}
+
+module.exports.nextGen = nextGen;
 module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;

@@ -70,6 +70,7 @@ wss.on("request", function (request) {
 
         if ("layout" in obj) {
             //console.log("Old layout " + obj.layout);
+            obj.layout = await logic.nextGen(obj.layout);
             board = await logic.saveLayout(obj._id, obj.layout);
             console.log("SERVER UPDATED " + board);
 
