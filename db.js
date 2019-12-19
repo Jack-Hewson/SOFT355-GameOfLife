@@ -8,7 +8,6 @@ async function getPlayer(name) {
 }
 
 async function getBoard(query) {
-    //console.log("DB " + id);
     return await schemas.Board.findOne(query);
 }
 
@@ -16,6 +15,18 @@ async function getBoards() {
     return await schemas.Board.find();
 }
 
+async function setPlayer(name) {
+    var player = new schemas.Player({
+        "name" : name,
+        clicks : 0 
+    })
+
+    console.log(player);
+    player.save();
+    return player;
+}
+
+module.exports.setPlayer = setPlayer;
 module.exports.getBoards = getBoards;
 module.exports.getPlayer = getPlayer;
 module.exports.getBoard = getBoard;

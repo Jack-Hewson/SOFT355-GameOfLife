@@ -1,7 +1,24 @@
 <section id="game" ng-init="initGame()">
     <p id="welcome">Initialised a new game <span id="gameId"></span> game of life</p>
-    <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
+
+    <div id="wrapper">
+        <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
+        <canvas id="inputCanvas" height="500" width="700" >Canvas not supported</canvas>
+    </div>
     <button id="new" ng-click="newGame()">New Game</button>
     <button id="next" ng-click="nextTurn()">Next Turn</button>
     <p id="openBoards"></p>
+    <p id="onlinePlayer"></p>
+    <button id="modalBtn" ng-click="newPlayer()">Open Modal</button>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form>
+                Enter Player Name:<br />
+                <input type="text" name="playerName" />
+                <input type="submit" id="submitPlayer" value="Submit" />
+            </form>
+        </div>
+    </div>
 </section>

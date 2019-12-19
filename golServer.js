@@ -18,7 +18,7 @@ app.get("/", function (request, response) {
 
 app.get("/initgame", async function (request, response) {
     var boards = await db.getBoard({ "name": "public" });
-    console.log(boards.layout);
+    //console.log(boards.layout);
     response.contentType("application/json");
     response.send({ "gameId": boards._id, "layout": boards.layout });
     //var id = [];
@@ -49,22 +49,36 @@ app.get("/nextTurn/:gameId/:layout", async function (request, response) {
     response.send({ "gameId": board._id, "layout": board.layout });
 })
 
+app.get("/newPlayer/:name", async function (request, response) {
+    var player = await db.setPlayer(request.params.name);
+    console.log(await db.getPlayer("JackHewson"));
+    response.contentType("application/json");
+    response.send({ "name": player.name, "clicks": player.clicks });
+})
+
 // Initialise a HTTP server using the Express app.
 var server = http.createServer(app);
 // Initialise the web socket instance.
 var wss = new WebSocketServer({ httpServer: server });
 var connection;
 var clients = [];
+var id = 1;
 wss.on("request", function (request) {
     
     console.log("Received request");
     // Store the connection in a variable.
     connection = request.accept(null, request.origin);
+    connection.id = id;
+    id++;
     clients.push(connection);
-    //console.log(clients);
+
+    connection.send(JSON.stringify({
+        "id": connection.id
+    }))
     // Set up the message event handler.
     connection.on("message", async function (message) {
         var obj = JSON.parse(message.utf8Data);
+        console.log(obj);
         var board;
         //console.log(obj._id);
 
@@ -72,22 +86,28 @@ wss.on("request", function (request) {
             //console.log("Old layout " + obj.layout);
             obj.layout = await logic.nextGen(obj.layout);
             board = await logic.saveLayout(obj._id, obj.layout);
-            console.log("SERVER UPDATED " + board);
+            //console.log("SERVER UPDATED " + board);
 
             clients.forEach(function each(client) {
-                    client.send(JSON.stringify({
-                        _id: board._id,
-                        layout: board.layout
-                    }))
+                client.send(JSON.stringify({
+                    _id: board._id,
+                    layout: board.layout
+                }))
             })
+        }
 
-            //clients.forEach(function (client) {
-            //    console.log(client);
-            //    client.send(JSON.stringify({
-            //        //_id: board._id,
-            //        layout: board.layout
-            //    }))
-            //})
+        if ("inputLayout" in obj) {
+            //console.log("obj id = " + obj.id);
+            
+            clients.forEach(function each(client) {
+                console.log("client ID = " + client.id);                
+                if (client.id !== obj.id) {
+                    client.send(JSON.stringify({
+                        "playerId": obj.id,
+                        "userLayout": obj.inputLayout
+                    }));
+                }
+            })
         }
     });
 })
