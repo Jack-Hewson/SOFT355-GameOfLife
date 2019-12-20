@@ -16,5 +16,8 @@ function randomBoard() {
 }
 
 
-var board = new schemas.Board({"name": "public", "layout": randomBoard()});
+var board = new schemas.Board({
+    "name": "public",
+    "layout": randomBoard()
+});
 board.save();

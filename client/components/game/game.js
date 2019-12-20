@@ -25,25 +25,41 @@ function GameOfLife() {
     }
 
     this.print = function (ctx, w, h, colour) {
+        
         //iterates through the rows and then the columns of the matrix
         for (var x = 0; x < this.board.length; x++) {//x and y must be reversed to align with what you see on the grid
             for (var y = 0; y < this.board[x].length; y++) {
                 //Checks if the current block is even valid (must be 1)
-                if (this.board[x][y]) {
+                //console.log("BOARD IS " + this.board[x][y]);
+                if (this.board[x][y] == 1) {
                     ctx.fillStyle = colour;
+                    //Fills in the square to be either orange(alive) or white(dead)
+                    ctx.fillRect(y * h, x * w, h, w);
+                    //Sets the black grid
+                    ctx.strokeRect(y * h, x * w, h, w);
                 }//if not 1 then make it dead (white)
-                else {
-                    ctx.fillStyle = "rgba(255,255,255,0)";
+                else if (this.board[x][y] == -1) {
+                    ctx.clearRect(y * h, x * w, h, w);
+                    ctx.strokeRect(y * h, x * w, h, w);
+                }
+                else if (colour == "#ffa500") {
+                    //ctx.clearRect(y * h, x * w, h, w);
+                    //ctx.strokeRect(y * h, x * w, h, w);
+                    ctx.fillStyle = "white";
+
                     //Creates the grid lines
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = "black";
+                    //Fills in the square to be either orange(alive) or white(dead)
+                    ctx.fillRect(y * h, x * w, h, w);
+                    //Sets the black grid
+                    ctx.strokeRect(y * h, x * w, h, w);
+                    //return;
                 }
-
-                //Sets the black grid
-                ctx.strokeRect(y * h, x * w, h, w);
-
-                //Fills in the square to be either orange(alive) or white(dead)
-                ctx.fillRect(y * h, x * w, h, w);
+                else {
+                    ctx.clearRect(y * h, x * w, h, w);
+                    ctx.strokeRect(y * h, x * w, h, w);
+                }
             }
         }
     }
@@ -53,13 +69,11 @@ function getMousePosition(c, event) {
     let rect = c.canvas.getBoundingClientRect();
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
-    return [x, y];
     console.log("Coordinate x: " + x, "Coordinate y: " + y);
+    return [x, y];    
 }
 
 function determineXY(c, x, y) {
-    c.ctx = c.canvas.getContext('2d');
-
     //canvas is split into 25x25 blocks so coords are divided by 25 each
     //1 is subtracted due to blocks starting at [0,0]
     x = Math.ceil(x / (25)) - 1;
@@ -76,27 +90,38 @@ function determineXY(c, x, y) {
     return change;
 }
 
+function addToInputCanvas(inputCanvas, change) {
+    console.log(inputCanvas.board);
+    console.log(change);
+
+    var current = JSON.parse(JSON.stringify(inputCanvas.board));
+    inputCanvas = processCanvas(inputCanvas, change);
+    //console.log("board length " + inputCanvas.board.length);
+    //console.log("board length[i]" + inputCanvas.board[i].length);
+
+    for (var i = 0; i <= inputCanvas.board.length - 1; i++) {
+        for (var j = 0; j <= inputCanvas.board[i].length - 1; j++) {
+            if (inputCanvas.board[i][j] == 1) {
+                console.log(inputCanvas.board[i][j] + " is 1");
+                current[i][j] = 1;
+            }
+            else if (inputCanvas.board[i][j] == -1) {
+                console.log(inputCanvas.board[i][j] + " is -1");
+                current[i][j] = 0;
+            }
+        }
+    }
+    inputCanvas.board = current;
+    console.log("current " + inputCanvas.board);
+    return inputCanvas;
+}
+
 function processCanvas(canvas, layout) {
     var width = document.getElementById("canvas").width;
     var height = document.getElementById("canvas").height
     var gridRows = Math.round(width / 25);
     var gridCol = Math.round(height / 25);
     canvas.initLoad(gridRows, gridCol, layout);
-    canvas.canvas = document.getElementById('canvas');
-    canvas.ctx = canvas.canvas.getContext('2d');
-    //console.log(canvas.board);
-    canvas.print(canvas.ctx, 25, 25,"#ffa500");
-    return canvas;
-}
-
-function proccessUserCanvas(canvas, layout) {
-    var width = document.getElementById("inputCanvas").width;
-    var height = document.getElementById("inputCanvas").height
-    var gridRows = Math.round(width / 25);
-    var gridCol = Math.round(height / 25);
-    canvas.initLoad(gridRows, gridCol, layout);
-    canvas.canvas = document.getElementById('inputCanvas');
-    canvas.ctx = canvas.canvas.getContext('2d');
     return canvas;
 }
 
@@ -109,6 +134,14 @@ gameModule.component("game", {
         var canvas = new GameOfLife();
         var inputCanvas = new GameOfLife();
         var userId;
+        inputCanvas.canvas = document.getElementById('inputCanvas');
+        inputCanvas.ctx = inputCanvas.canvas.getContext('2d');
+        canvas.canvas = document.getElementById('canvas');
+        canvas.ctx = canvas.canvas.getContext('2d');
+        var width = document.getElementById("canvas").width;
+        var height = document.getElementById("canvas").height
+        var gridRows = Math.round(width / 25);
+        var gridCol = Math.round(height / 25);
 
         socket.onmessage = function (event) {
             console.log("MESSAGE FROM SERVER RECEIVED");
@@ -118,8 +151,11 @@ gameModule.component("game", {
                 var eventObject = JSON.parse(event.data)
 
                 if ("layout" in eventObject) {
-                    processCanvas(canvas, eventObject.layout);
+                    canvas = processCanvas(canvas, eventObject.layout);
                     console.log("Message from server: '" + eventObject._id + "'");
+                    canvas.print(canvas.ctx, 25, 25, "#ffa500");
+                    inputCanvas.initEmpty(gridRows, gridCol);
+                    inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
                 }
 
                 if ("id" in eventObject) {
@@ -128,15 +164,21 @@ gameModule.component("game", {
                 }
 
                 if ("userLayout" in eventObject) {
-                    console.log("Player " + eventObject.playerId + " has done this " + eventObject.userLayout);
-                    inputCanvas = proccessUserCanvas(inputCanvas, eventObject.userLayout);
+                    //console.log("Player " + eventObject.playerId + " has done this " + eventObject.userLayout);
+                    console.log(eventObject.userLayout);
+                    inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
+                    console.log(inputCanvas.board);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
                 }
             }
             catch (error) {
                 console.log("error " + error);
             }
-        }        
+        }
+
+        socket.onclose = function() { 
+            socket.send("BYE BYE");
+        }
 
         //Add functions to the scope
         $scope.initGame = function () {
@@ -144,17 +186,20 @@ gameModule.component("game", {
                 $("#openBoards").html(response.data["gameId"]);
                 $("#gameId").html(response.data["gameId"]);
                 canvas = processCanvas(canvas, response.data["layout"]);
+                console.log(canvas);
+                canvas.print(canvas.ctx, 25, 25, "#ffa500");
+                inputCanvas.initEmpty(gridRows, gridCol);
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
-                    //getMousePosition(canvas, e);
                     [x, y] = getMousePosition(canvas, e);
-                    layout = determineXY(canvas, x, y);
-                    inputCanvas = proccessUserCanvas(inputCanvas, layout);
+                    layout = determineXY(canvas, x, y);                    
+                    //inputCanvas = processCanvas(inputCanvas, layout);
+                    inputCanvas = addToInputCanvas(inputCanvas, layout);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
-                    //console.log("layout being sent to server " + layout);
+                    console.log(inputCanvas)
                     socket.send(JSON.stringify({
-                        "id": userId,
-                        "inputLayout": layout
+                        _id: $("#gameId").html(),
+                        "inputLayout": inputCanvas.board
                     }));
                 });
             })           
@@ -167,6 +212,7 @@ gameModule.component("game", {
 
                 //socket.send("Hello world from the angularJS client: gameId is '" + response.data["layout"] + "'");
                 processCanvas(canvas, response.data["layout"]);
+                canvas.print(canvas.ctx, 25, 25, "#ffa500");
             });
         }
 
@@ -182,8 +228,17 @@ gameModule.component("game", {
 
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
-                layout: canvas.board
+                layout: canvas.board,
+                userLayout: inputCanvas.board
             }))
+        }
+
+        $scope.commit = function () {
+            console.log("COMMITED " + inputCanvas.board);
+            socket.send(JSON.stringify({
+                _id: $("#gameId").html(),
+                "commitedLayout": inputCanvas.board
+            }));
         }
 
         $scope.newPlayer = function () {

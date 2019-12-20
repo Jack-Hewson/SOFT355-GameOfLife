@@ -18,16 +18,8 @@ function convert1D(layout) {
     width = 28;
 
     for (var x = 0; x < layout.length; x++) {
-        //for (var y = 0; y < width; y++) {
         board = board.concat(layout[x]);
-        //}
     }
-
-
-    //for (var x = 0; x < height * width; x++) {
-    //    console.log("layout[" + x + "] =" + layout[x, 1]);
-    //    board[x] = layout[x];
-    //}
     return board;
 }
 
@@ -39,23 +31,45 @@ async function newGame() {
         layout: board
     });
     
-    //console.log(game);
     await game.save();
     console.log("saved");
-    //var game = await db.getBoard("5df7c65d57bba34d2ce08056");
 
     return game;
 }
 
 async function saveLayout(gameId, layout) {
-    //console.log("THIS IS THE LAYOUT " + layout);
+    console.log("SAVE LAYOUT RUNNNIG");
     var game = await db.getBoard({ "_id": gameId });
     
     game.layout = convert1D(layout);
-    //console.log("LOGIC LAYOUT " + game.layout);
 
     await game.save();
-    //console.log("UPDATED LAYOUT " + game.layout);
+    return game;
+}
+
+async function saveUserLayout(gameId, layout) {
+    console.log("SAVE USER-LAYOUT RUNNNIG");
+    var game = await db.getBoard({ "_id": gameId });
+    //game.inputLayout = convert1D(layout);
+    var tempLayout;
+    console.log("GAME VALUE IS..." + game);
+    var test = game.inputLayout;
+    tempLayout = convert1D(layout);
+    console.log("temp " + tempLayout);
+
+    for (var x = 0; x < game.layout.length; x++) {        
+        if (test[x] == 0 && tempLayout[x] == 1) {
+           console.log("x: " + x);
+            console.log("game = " + test[x]);
+           console.log("temp = " + tempLayout[x]);
+            test[x] = 1;
+       }
+    }
+    console.log("NEW TEST " + test.length);
+    console.log("GAME LENGTH " + game.inputLayout.length);
+    game.inputLayout = test;
+    //console.log(game.inputLayout);
+    await game.save;
     return game;
 }
 
@@ -96,6 +110,7 @@ async function nextGen(layout) {
     return boardNext;
 }
 
+module.exports.saveUserLayout = saveUserLayout;
 module.exports.nextGen = nextGen;
 module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;

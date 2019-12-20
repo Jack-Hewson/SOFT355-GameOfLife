@@ -63,6 +63,20 @@ var wss = new WebSocketServer({ httpServer: server });
 var connection;
 var clients = [];
 var id = 1;
+var i = 0;
+
+//TO BE USED
+
+/*set = setInterval(function () {
+    i++;
+    clients.forEach(function each(client) {
+        client.send(i);
+    })
+
+    if (i >= 5)
+        i = 0;
+
+}, 1000);*/
 wss.on("request", function (request) {
     
     console.log("Received request");
@@ -71,10 +85,10 @@ wss.on("request", function (request) {
     connection.id = id;
     id++;
     clients.push(connection);
-
     connection.send(JSON.stringify({
         "id": connection.id
     }))
+
     // Set up the message event handler.
     connection.on("message", async function (message) {
         var obj = JSON.parse(message.utf8Data);
@@ -83,10 +97,8 @@ wss.on("request", function (request) {
         //console.log(obj._id);
 
         if ("layout" in obj) {
-            //console.log("Old layout " + obj.layout);
             obj.layout = await logic.nextGen(obj.layout);
             board = await logic.saveLayout(obj._id, obj.layout);
-            //console.log("SERVER UPDATED " + board);
 
             clients.forEach(function each(client) {
                 client.send(JSON.stringify({
@@ -97,18 +109,46 @@ wss.on("request", function (request) {
         }
 
         if ("inputLayout" in obj) {
-            //console.log("obj id = " + obj.id);
+            var board = new Array();
+            height = 20;
+            width = 28;
+            for (var x = 0; x < obj.inputLayout.length; x++) {
+                board = board.concat(obj.inputLayout[x]);
+            }
+            
+            obj.inputLayout = board;
+            //console.log(obj.inputLayout);
             
             clients.forEach(function each(client) {
                 console.log("client ID = " + client.id);                
                 if (client.id !== obj.id) {
                     client.send(JSON.stringify({
                         "playerId": obj.id,
-                        "userLayout": obj.inputLayout
+                        "userLayout": obj.inputLayout 
                     }));
                 }
             })
         }
+
+        if ("commitedLayout" in obj) {
+            obj = await logic.saveUserLayout(obj._id, obj.commitedLayout);
+            console.log("OBJECT " + obj);
+            console.log(await db.getBoard({ "name": "public" }));
+        }
+
+        if ("userLayout" in obj) {
+            console.log("USER LAYOUT " + obj.userLayout);
+        }
+    });
+
+    connection.on("close", function (message) {
+        console.log("CONNECTION CLOSED " + message);
+        clients.forEach(function each(client) {
+            if (client.readyState === 1) {
+                console.log("client " + client.id + "is still connected");
+            }
+            //console.log(client.readyState);
+        })
     });
 })
 
