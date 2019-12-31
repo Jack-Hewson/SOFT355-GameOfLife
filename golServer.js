@@ -139,6 +139,16 @@ wss.on("request", function (request) {
         if ("userLayout" in obj) {
             console.log("USER LAYOUT " + obj.userLayout);
         }
+
+        if ("message" in obj) {
+            clients.forEach(function each(client) {
+                console.log("client ID = " + client.id);
+                client.send(JSON.stringify({
+                    "chatName": obj.name,
+                    "chatMessage": obj.message
+                }));
+            })
+        }
     });
 
     connection.on("close", function (message) {

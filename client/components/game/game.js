@@ -170,6 +170,11 @@ gameModule.component("game", {
                     console.log(inputCanvas.board);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
                 }
+
+                if ("chatName" in eventObject) {
+                    console.log(eventObject);
+
+                }
             }
             catch (error) {
                 console.log("error " + error);
@@ -274,6 +279,17 @@ gameModule.component("game", {
                     modal.style.display = "none";
                 }
             }
+        }
+
+        $scope.sendMessage = function () {
+            var name = document.getElementsByName("name")[0].value;
+            var message = document.getElementsByName("message")[0].value;
+            console.log(name + " & " + message);
+            socket.send(JSON.stringify({
+                _id: $("#gameId").html(),
+                name: name,
+                message: message
+            }));
         }
     }
 })
