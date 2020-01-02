@@ -122,14 +122,14 @@ wss.on("request", function (request) {
             }
             
             obj.inputLayout = board;
-            //console.log(obj.inputLayout);
             
             clients.forEach(function each(client) {
                 console.log("client ID = " + client.id);                
                 if (client.id !== obj.id) {
                     client.send(JSON.stringify({
                         "playerId": obj.id,
-                        "userLayout": obj.inputLayout 
+                        "userLayout": obj.inputLayout,
+                        "colour": obj.colour
                     }));
                 }
             })

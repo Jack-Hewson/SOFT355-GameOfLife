@@ -168,7 +168,7 @@ gameModule.component("game", {
                     console.log(eventObject.userLayout);
                     inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
                     console.log(inputCanvas.board);
-                    inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
+                    inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
                 }
 
                 if ("chatName" in eventObject) {
@@ -209,7 +209,8 @@ gameModule.component("game", {
                     console.log(inputCanvas)
                     socket.send(JSON.stringify({
                         _id: $("#gameId").html(),
-                        "inputLayout": inputCanvas.board
+                        "inputLayout": inputCanvas.board,
+                        "colour": document.getElementById("userId").style.color
                     }));
                 });
             })           
