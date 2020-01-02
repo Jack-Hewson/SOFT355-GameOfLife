@@ -173,7 +173,7 @@ gameModule.component("game", {
 
                 if ("chatName" in eventObject) {
                     console.log(eventObject);
-
+                    document.getElementById("chat").innerHTML += eventObject.chatName + ": " + eventObject.chatMessage + "<br>";
                 }
             }
             catch (error) {
@@ -284,7 +284,6 @@ gameModule.component("game", {
         $scope.sendMessage = function () {
             var name = document.getElementsByName("name")[0].value;
             var message = document.getElementsByName("message")[0].value;
-            console.log(name + " & " + message);
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
                 name: name,
