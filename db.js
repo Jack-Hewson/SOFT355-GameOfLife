@@ -15,9 +15,10 @@ async function getBoards() {
     return await schemas.Board.find();
 }
 
-async function setPlayer(name) {
+async function setPlayer(name,colour) {
     var player = new schemas.Player({
-        "name" : name,
+        "name": name,
+        "colour":colour,
         clicks : 0 
     })
 

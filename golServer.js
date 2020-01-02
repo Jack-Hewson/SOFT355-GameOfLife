@@ -42,18 +42,23 @@ app.get("/newgame", async function (request, response) {
 app.get("/nextTurn/:gameId/:layout", async function (request, response) {
     var gameId = request.params.gameId;
     var layout = request.params.layout;
-    console.log("RECEIVED LAYOUT: " + layout);
+    //console.log("RECEIVED LAYOUT: " + layout);
 
     var board = await logic.saveLayout(gameId, layout);
     response.contentType("application/json");
     response.send({ "gameId": board._id, "layout": board.layout });
 })
 
-app.get("/newPlayer/:name", async function (request, response) {
-    var player = await db.setPlayer(request.params.name);
-    console.log(await db.getPlayer("JackHewson"));
+app.get("/newPlayer/:name/:colour", async function (request, response) {
+    console.log(request);
+    var name = request.params.name;
+    var colour = request.params.colour;
+
+    var player = await db.setPlayer(name, colour);
+
+    console.log(await db.getPlayer(name));
     response.contentType("application/json");
-    response.send({ "name": player.name, "clicks": player.clicks });
+    response.send({ "name": player.name, "colour":player.colour,"clicks": player.clicks });
 })
 
 // Initialise a HTTP server using the Express app.
@@ -141,10 +146,12 @@ wss.on("request", function (request) {
         }
 
         if ("message" in obj) {
+            console.log("user's colour " + obj.colour);
             clients.forEach(function each(client) {
                 console.log("client ID = " + client.id);
                 client.send(JSON.stringify({
                     "chatName": obj.name,
+                    "chatColour": obj.colour,
                     "chatMessage": obj.message
                 }));
             })

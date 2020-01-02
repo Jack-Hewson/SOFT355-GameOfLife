@@ -172,8 +172,13 @@ gameModule.component("game", {
                 }
 
                 if ("chatName" in eventObject) {
-                    console.log(eventObject);
-                    document.getElementById("chat").innerHTML += eventObject.chatName + ": " + eventObject.chatMessage + "<br>";
+                    console.log(eventObject.chatColour);
+                    //document.getElementById("chat").innerHTML += eventObject.chatName.fontcolor(eventObject.chatColour) + ": " + eventObject.chatMessage + "<br>";
+                    $('#chat')
+                        .append($('<span>').css('color', eventObject.chatColour).text(eventObject.chatName))
+                        .append($('<span>').text(": " + eventObject.chatMessage))
+                        .append($('<br>'));
+
                 }
             }
             catch (error) {
@@ -265,8 +270,13 @@ gameModule.component("game", {
 
             submit.onclick = function () {
                 var name = document.getElementsByName("playerName")[0].value;
+                var colour = document.getElementsByName("playerColour")[0].value;
+                var userId = document.getElementById("userId");
 
-                $http.get("/newPlayer/" + name).then(function (response) {
+                userId.innerHTML = name;
+                userId.style.color = colour;
+
+                $http.get("/newPlayer/" + name + "/" + colour).then(function (response) {
                     $("#onlinePlayers").html(response.data["name"] + " - clicks: " + response.data["click"]);
                 })
 
@@ -282,11 +292,15 @@ gameModule.component("game", {
         }
 
         $scope.sendMessage = function () {
-            var name = document.getElementsByName("name")[0].value;
+            var userId = document.getElementById("userId");
             var message = document.getElementsByName("message")[0].value;
+
+            console.log("colour is " + userId.style.color);
+
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
-                name: name,
+                name: userId.innerHTML,
+                colour: userId.style.color,
                 message: message
             }));
         }

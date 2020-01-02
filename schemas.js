@@ -8,6 +8,7 @@ var Board = mongoose.model("Board", {
 
 var Player = mongoose.model("Player", {
     name: String,
+    colour: String,
     clicks: Number
 });
 

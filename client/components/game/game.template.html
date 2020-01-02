@@ -1,5 +1,5 @@
 <section id="game" ng-init="initGame()">
-    <p id="welcome">Initialised a new game <span id="gameId"></span> game of life</p>
+    <p id="welcome"><span id="userId"></span> joined public game <span id="gameId"></span></p>
 
     <div id="wrapper">
         <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
@@ -17,7 +17,8 @@
             <span class="close">&times;</span>
             <form>
                 Enter Player Name:<br />
-                <input type="text" name="playerName" />
+                <input type="text" name="playerName" placeholder="Username"/>
+                <input type="text" name="playerColour" placeholder="Colour"/>
                 <input type="submit" id="submitPlayer" value="Submit" />
             </form>
         </div>
@@ -25,7 +26,6 @@
 
     <div>
         <div id="chat"></div>
-        <input id="name" type="text" placeholder="name" name="name"/>
         <input id="message" type="text" placeholder="message" name="message"/>
         <button id="send" ng-click="sendMessage()">Send</button>
     </div>
