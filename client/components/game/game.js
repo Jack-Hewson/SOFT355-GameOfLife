@@ -144,18 +144,24 @@ gameModule.component("game", {
         var gridCol = Math.round(height / 25);
 
         socket.onmessage = function (event) {
-            console.log("MESSAGE FROM SERVER RECEIVED");
+            //console.log("MESSAGE FROM SERVER RECEIVED");
             //console.log(event.data);
 
             try {
                 var eventObject = JSON.parse(event.data)
+
+                if ("ping" in eventObject) {
+                    socket.send(JSON.stringify({
+                        "pong": eventObject.ping
+                    }));
+                }
 
                 if ("layout" in eventObject) {
                     canvas = processCanvas(canvas, eventObject.layout);
                     console.log("Message from server: '" + eventObject._id + "'");
                     canvas.print(canvas.ctx, 25, 25, "#ffa500");
                     inputCanvas.initEmpty(gridRows, gridCol);
-                    inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
+                    inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
                 }
 
                 if ("id" in eventObject) {
@@ -180,9 +186,14 @@ gameModule.component("game", {
                         .append($('<br>'));
 
                 }
+
+                if ("counter" in eventObject) {
+                    $('#counter').text(eventObject.counter);
+                }
             }
             catch (error) {
                 console.log("error " + error);
+                console.log("error websocket received = " + event.data);
             }
         }
 
@@ -240,7 +251,8 @@ gameModule.component("game", {
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
                 layout: canvas.board,
-                userLayout: inputCanvas.board
+                userLayout: inputCanvas.board,
+                userColour: document.getElementById("userId").style.color
             }))
         }
 

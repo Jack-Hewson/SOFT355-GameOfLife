@@ -69,21 +69,34 @@ var connection;
 var clients = [];
 var id = 1;
 var i = 0;
+var currentTurn = 0;
 
-//TO BE USED
-
-/*set = setInterval(function () {
+set = setInterval(function () {
+    console.log("Current Turn = " + currentTurn);
     i++;
+    clients[currentTurn].send("IT IS YOUR GO");
     clients.forEach(function each(client) {
-        client.send(i);
+        client.send(JSON.stringify({
+            "counter": i
+        }));
     })
 
-    if (i >= 5)
+    if (i >= 5) {
         i = 0;
+        currentTurn++;
+        if (currentTurn > clients.length - 1)
+            currentTurn = 0;
 
-}, 1000);*/
-wss.on("request", function (request) {
-    
+        while (clients[currentTurn].isConnected === false) {
+            currentTurn++;
+            if (currentTurn > clients.length - 1)
+                currentTurn = 0;
+        }
+    }
+    //console.log("Client length " + clients.length);
+}, 1000);
+
+wss.on("request", function (request) {    
     console.log("Received request");
     // Store the connection in a variable.
     connection = request.accept(null, request.origin);
@@ -97,9 +110,7 @@ wss.on("request", function (request) {
     // Set up the message event handler.
     connection.on("message", async function (message) {
         var obj = JSON.parse(message.utf8Data);
-        console.log(obj);
         var board;
-        //console.log(obj._id);
 
         if ("layout" in obj) {
             obj.layout = await logic.nextGen(obj.layout);
@@ -108,7 +119,8 @@ wss.on("request", function (request) {
             clients.forEach(function each(client) {
                 client.send(JSON.stringify({
                     _id: board._id,
-                    layout: board.layout
+                    layout: board.layout,
+                    colour: obj.userColour
                 }))
             })
         }
@@ -122,27 +134,33 @@ wss.on("request", function (request) {
             }
             
             obj.inputLayout = board;
-            
+
+            console.log("obj ID = " + obj._id);
+
             clients.forEach(function each(client) {
-                console.log("client ID = " + client.id);                
+                //console.log("client ID = " + client.id);                
                 if (client.id !== obj.id) {
+                    console.log("sending to = " + client.id);
                     client.send(JSON.stringify({
                         "playerId": obj.id,
                         "userLayout": obj.inputLayout,
                         "colour": obj.colour
                     }));
                 }
+                else {
+                    console.log("NOT sending to = " + client.id);   
+                }
             })
         }
 
         if ("commitedLayout" in obj) {
             obj = await logic.saveUserLayout(obj._id, obj.commitedLayout);
-            console.log("OBJECT " + obj);
-            console.log(await db.getBoard({ "name": "public" }));
+           // console.log("OBJECT " + obj);
+            //console.log(await db.getBoard({ "name": "public" }));
         }
 
         if ("userLayout" in obj) {
-            console.log("USER LAYOUT " + obj.userLayout);
+            //console.log("USER LAYOUT " + obj.userLayout);
         }
 
         if ("message" in obj) {
@@ -156,17 +174,43 @@ wss.on("request", function (request) {
                 }));
             })
         }
+
+        if ("pong" in obj) {
+            console.log("PONG RECEIVED FROM " + obj.pong);
+
+            clients.forEach(function each(client) {
+                if (client.id === obj.pong) {
+                    client.isConnected = true;
+                }
+
+                console.log("client " + client.id + " : " + client.isConnected);
+            });
+        }
     });
 
     connection.on("close", function (message) {
+
+        console.log(connection.id + " lost connection");
+
         console.log("CONNECTION CLOSED " + message);
+        //clients.splice(clients.indexOf(connection.id), 1);
+
         clients.forEach(function each(client) {
-            if (client.readyState === 1) {
-                console.log("client " + client.id + "is still connected");
-            }
-            //console.log(client.readyState);
+            client.isConnected = false;
+            client.send(JSON.stringify({
+                "ping": client.id
+            }));
         })
     });
+
+    //connection.on("pong", function (message) {
+    //    console.log("Pong received from " + connection.id);
+    //});
+
+    connection.on("error", function (message) {
+        console.log("ERROR " + message);
+        console.log("client " + connection.id + " is not connected");
+    })
 })
 
 server.listen(port, async function() {
