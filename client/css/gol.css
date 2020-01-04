@@ -1,6 +1,17 @@
-canvas {
-    display: block;
+#wrapper {
+    position: relative;
+    height: 500px;
+    width: 700px;
     margin-left: auto;
     margin-right: auto;
+}
+
+#inputCanvas {
+    pointer-events: none;    
+}
+
+canvas {
+    position: absolute;
+    display: block;
     border: 3px solid #000000;
 }

@@ -1,7 +1,36 @@
 <section id="game" ng-init="initGame()">
-    <p id="welcome">Initialised a new game <span id="gameId"></span> game of life</p>
-    <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
-    <button id="new" ng-click="newGame()">New Game</button>
-    <button id="next" ng-click="nextTurn()">Next Turn</button>
+    <p id="welcome"><span id="userId"></span> joined public game <span id="gameId"></span></p>
+
+    <p id="counter"></p>
+    <h2 id="userTurn"></h2>
+
+    <div id="wrapper">
+        <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
+        <canvas id="inputCanvas" height="500" width="700">Canvas not supported</canvas>
+    </div>
+
+    <!--<button id="new" ng-click="newGame()">New Game</button>-->
+    <!--<button id="next" ng-click="nextTurn()">Next Turn</button>-->
+    <!--<button id="commit" ng-click="commit()">Commit</button>-->
     <p id="openBoards"></p>
+    <p id="onlinePlayer"></p>
+    <button id="modalBtn" ng-click="newPlayer()">Open Modal</button>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form>
+                Enter Player Name:<br />
+                <input type="text" name="playerName" placeholder="Username" />
+                <input type="text" name="playerColour" placeholder="Colour" />
+                <input type="submit" id="submitPlayer" value="Submit" />
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div id="chat"></div>
+        <input id="message" type="text" placeholder="message" name="message" />
+        <button id="send" ng-click="sendMessage()">Send</button>
+    </div>
 </section>
