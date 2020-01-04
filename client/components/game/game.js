@@ -245,10 +245,7 @@ gameModule.component("game", {
                         "colour": document.getElementById("userId").style.color
                     }));
                 });
-            })
-
-
-           
+            })          
         }
         /*
         $scope.newGame = function () {
