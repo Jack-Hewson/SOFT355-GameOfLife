@@ -49,12 +49,21 @@ app.get("/nextTurn/:gameId/:layout", async function (request, response) {
     response.send({ "gameId": board._id, "layout": board.layout });
 })
 
-app.get("/newPlayer/:name/:colour", async function (request, response) {
-    console.log(request);
+app.get("/newPlayer/:name/:colour/:id", async function (request, response) {
     var name = request.params.name;
     var colour = request.params.colour;
+    var userid = Number(request.params.id);
 
     var player = await db.setPlayer(name, colour);
+
+    clients.forEach(function each(client) {
+        console.log("client id = " + client.id + " and userid = " + userid);
+        console.log(client.id === userid)
+        if (client.id === userid) {
+            console.log("Entering the dragon");
+            client.username = name;
+        }
+    });
 
     console.log(await db.getPlayer(name));
     response.contentType("application/json");
@@ -72,28 +81,33 @@ var i = 0;
 var currentTurn = 0;
 
 set = setInterval(function () {
-    console.log("Current Turn = " + currentTurn);
+    
     i++;
-    clients[currentTurn].send("IT IS YOUR GO");
-    clients.forEach(function each(client) {
-        client.send(JSON.stringify({
-            "counter": i
-        }));
-    })
+    try {
+        console.log("Current Turn = " + clients[currentTurn].username);
+        //clients[currentTurn].send("IT IS " + clients[currentTurn].username + "'s turn");
+        clients.forEach(function each(client) {
+            client.send(JSON.stringify({
+                "counter": i,
+                "userTurn": clients[currentTurn].username
+            }));
+        })
 
-    if (i >= 5) {
-        i = 0;
-        currentTurn++;
-        if (currentTurn > clients.length - 1)
-            currentTurn = 0;
-
-        while (clients[currentTurn].isConnected === false) {
+        if (i >= 5) {
+            i = 0;
             currentTurn++;
+
             if (currentTurn > clients.length - 1)
                 currentTurn = 0;
+
+            while (clients[currentTurn].isConnected === false) {
+                currentTurn++;
+                if (currentTurn > clients.length - 1)
+                    currentTurn = 0;
+            }
         }
     }
-    //console.log("Client length " + clients.length);
+    catch (error) { }
 }, 1000);
 
 wss.on("request", function (request) {    
@@ -176,11 +190,12 @@ wss.on("request", function (request) {
         }
 
         if ("pong" in obj) {
-            console.log("PONG RECEIVED FROM " + obj.pong);
+            console.log("PONG RECEIVED FROM " + obj.pong + " " + obj.username);
 
             clients.forEach(function each(client) {
                 if (client.id === obj.pong) {
                     client.isConnected = true;
+                    client.username = obj.username;
                 }
 
                 console.log("client " + client.id + " : " + client.isConnected);

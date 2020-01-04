@@ -2,11 +2,13 @@
     <p id="welcome"><span id="userId"></span> joined public game <span id="gameId"></span></p>
 
     <p id="counter"></p>
+    <h2 id="userTurn"></h2>
 
     <div id="wrapper">
         <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
         <canvas id="inputCanvas" height="500" width="700" >Canvas not supported</canvas>
     </div>
+
     <button id="new" ng-click="newGame()">New Game</button>
     <button id="next" ng-click="nextTurn()">Next Turn</button>
     <button id="commit" ng-click="commit()">Commit</button>

@@ -69,7 +69,7 @@ function getMousePosition(c, event) {
     let rect = c.canvas.getBoundingClientRect();
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
-    console.log("Coordinate x: " + x, "Coordinate y: " + y);
+    //console.log("Coordinate x: " + x, "Coordinate y: " + y);
     return [x, y];    
 }
 
@@ -78,7 +78,7 @@ function determineXY(c, x, y) {
     //1 is subtracted due to blocks starting at [0,0]
     x = Math.ceil(x / (25)) - 1;
     y = Math.ceil(y / (25)) - 1;
-    console.log("grid x: " + x, "grid y: " + y);
+   // console.log("grid x: " + x, "grid y: " + y);
     var old = JSON.parse(JSON.stringify(c.board));
     c.board[y][x] ^= 1;
     var change = [];
@@ -91,8 +91,8 @@ function determineXY(c, x, y) {
 }
 
 function addToInputCanvas(inputCanvas, change) {
-    console.log(inputCanvas.board);
-    console.log(change);
+   // console.log(inputCanvas.board);
+   // console.log(change);
 
     var current = JSON.parse(JSON.stringify(inputCanvas.board));
     inputCanvas = processCanvas(inputCanvas, change);
@@ -102,17 +102,17 @@ function addToInputCanvas(inputCanvas, change) {
     for (var i = 0; i <= inputCanvas.board.length - 1; i++) {
         for (var j = 0; j <= inputCanvas.board[i].length - 1; j++) {
             if (inputCanvas.board[i][j] == 1) {
-                console.log(inputCanvas.board[i][j] + " is 1");
+               // console.log(inputCanvas.board[i][j] + " is 1");
                 current[i][j] = 1;
             }
             else if (inputCanvas.board[i][j] == -1) {
-                console.log(inputCanvas.board[i][j] + " is -1");
+               // console.log(inputCanvas.board[i][j] + " is -1");
                 current[i][j] = 0;
             }
         }
     }
     inputCanvas.board = current;
-    console.log("current " + inputCanvas.board);
+    //console.log("current " + inputCanvas.board);
     return inputCanvas;
 }
 
@@ -152,7 +152,8 @@ gameModule.component("game", {
 
                 if ("ping" in eventObject) {
                     socket.send(JSON.stringify({
-                        "pong": eventObject.ping
+                        "pong": eventObject.ping,
+                        "username": $('#userId').text()
                     }));
                 }
 
@@ -171,9 +172,9 @@ gameModule.component("game", {
 
                 if ("userLayout" in eventObject) {
                     //console.log("Player " + eventObject.playerId + " has done this " + eventObject.userLayout);
-                    console.log(eventObject.userLayout);
+                    //console.log(eventObject.userLayout);
                     inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
-                    console.log(inputCanvas.board);
+                    //console.log(inputCanvas.board);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
                 }
 
@@ -184,11 +185,21 @@ gameModule.component("game", {
                         .append($('<span>').css('color', eventObject.chatColour).text(eventObject.chatName))
                         .append($('<span>').text(": " + eventObject.chatMessage))
                         .append($('<br>'));
-
                 }
 
                 if ("counter" in eventObject) {
                     $('#counter').text(eventObject.counter);
+                    $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
+
+                    if (eventObject.userTurn !== $('#userId').text()) {
+                        console.log("This client should not be clicking");
+                        $('#canvas').css({ "pointer-events": "none" });
+                        //pointer - events: none;
+                    }
+                    else {
+                        console.log("This client SHOULD be clicking");
+                        $('#canvas').css({ "pointer-events": "auto" });
+                    }
                 }
             }
             catch (error) {
@@ -213,11 +224,10 @@ gameModule.component("game", {
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
                     [x, y] = getMousePosition(canvas, e);
-                    layout = determineXY(canvas, x, y);                    
-                    //inputCanvas = processCanvas(inputCanvas, layout);
+                    layout = determineXY(canvas, x, y);
                     inputCanvas = addToInputCanvas(inputCanvas, layout);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
-                    console.log(inputCanvas)
+
                     socket.send(JSON.stringify({
                         _id: $("#gameId").html(),
                         "inputLayout": inputCanvas.board,
@@ -241,7 +251,7 @@ gameModule.component("game", {
         $scope.nextTurn = function () {
             $("#next").attr("disable", true);
             var layout = canvas.board;
-            console.log("CANVAS " + layout);
+            //console.log("CANVAS " + layout);
             //var uri = "/nextTurn/" + gameId + "/" + layout;
 
             //$http.get(uri).then(function (response) {
@@ -284,12 +294,12 @@ gameModule.component("game", {
             submit.onclick = function () {
                 var name = document.getElementsByName("playerName")[0].value;
                 var colour = document.getElementsByName("playerColour")[0].value;
-                var userId = document.getElementById("userId");
+                var username = document.getElementById("userId");
 
-                userId.innerHTML = name;
-                userId.style.color = colour;
+                username.innerHTML = name;
+                username.style.color = colour;
 
-                $http.get("/newPlayer/" + name + "/" + colour).then(function (response) {
+                $http.get("/newPlayer/" + name + "/" + colour + "/" + userId).then(function (response) {
                     $("#onlinePlayers").html(response.data["name"] + " - clicks: " + response.data["click"]);
                 })
 
