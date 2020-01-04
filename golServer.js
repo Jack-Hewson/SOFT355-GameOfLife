@@ -96,7 +96,6 @@ set = setInterval(function () {
         if (i >= 5) {
             i = 0;
             currentTurn++;
-
             if (currentTurn > clients.length - 1)
                 currentTurn = 0;
 

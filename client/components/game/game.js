@@ -200,6 +200,17 @@ gameModule.component("game", {
                         console.log("This client SHOULD be clicking");
                         $('#canvas').css({ "pointer-events": "auto" });
                     }
+
+                    if (eventObject.counter >= 5) {
+                        setTimeout(function () {
+                            socket.send(JSON.stringify({
+                                _id: $("#gameId").html(),
+                                layout: canvas.board,
+                                userLayout: inputCanvas.board,
+                                userColour: document.getElementById("userId").style.color
+                            }))
+                        }, 1000);
+                    }
                 }
             }
             catch (error) {
@@ -236,7 +247,7 @@ gameModule.component("game", {
                 });
             })           
         }
-
+        /*
         $scope.newGame = function () {
             //Initialise a new game
             $http.get("/newgame").then(function (response) {
@@ -247,7 +258,8 @@ gameModule.component("game", {
                 canvas.print(canvas.ctx, 25, 25, "#ffa500");
             });
         }
-
+        */
+        /*
         $scope.nextTurn = function () {
             $("#next").attr("disable", true);
             var layout = canvas.board;
@@ -265,7 +277,8 @@ gameModule.component("game", {
                 userColour: document.getElementById("userId").style.color
             }))
         }
-
+        */
+        /*
         $scope.commit = function () {
             console.log("COMMITED " + inputCanvas.board);
             socket.send(JSON.stringify({
@@ -273,7 +286,7 @@ gameModule.component("game", {
                 "commitedLayout": inputCanvas.board
             }));
         }
-
+        */
         $scope.newPlayer = function () {
             //Get the modal
             var modal = document.getElementById("userModal");

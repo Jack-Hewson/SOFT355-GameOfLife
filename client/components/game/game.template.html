@@ -6,12 +6,12 @@
 
     <div id="wrapper">
         <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
-        <canvas id="inputCanvas" height="500" width="700" >Canvas not supported</canvas>
+        <canvas id="inputCanvas" height="500" width="700">Canvas not supported</canvas>
     </div>
 
-    <button id="new" ng-click="newGame()">New Game</button>
-    <button id="next" ng-click="nextTurn()">Next Turn</button>
-    <button id="commit" ng-click="commit()">Commit</button>
+    <!--<button id="new" ng-click="newGame()">New Game</button>-->
+    <!--<button id="next" ng-click="nextTurn()">Next Turn</button>-->
+    <!--<button id="commit" ng-click="commit()">Commit</button>-->
     <p id="openBoards"></p>
     <p id="onlinePlayer"></p>
     <button id="modalBtn" ng-click="newPlayer()">Open Modal</button>
@@ -21,8 +21,8 @@
             <span class="close">&times;</span>
             <form>
                 Enter Player Name:<br />
-                <input type="text" name="playerName" placeholder="Username"/>
-                <input type="text" name="playerColour" placeholder="Colour"/>
+                <input type="text" name="playerName" placeholder="Username" />
+                <input type="text" name="playerColour" placeholder="Colour" />
                 <input type="submit" id="submitPlayer" value="Submit" />
             </form>
         </div>
@@ -30,7 +30,7 @@
 
     <div>
         <div id="chat"></div>
-        <input id="message" type="text" placeholder="message" name="message"/>
+        <input id="message" type="text" placeholder="message" name="message" />
         <button id="send" ng-click="sendMessage()">Send</button>
     </div>
 </section>
