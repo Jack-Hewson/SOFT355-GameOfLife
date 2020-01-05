@@ -80,11 +80,10 @@ var id = 1;
 var i = 0;
 var currentTurn = 0;
 
-set = setInterval(function () {
-    
-    i++;
+set = setInterval(function () {    
     try {
-        console.log("Current Turn = " + clients[currentTurn].username);
+        i++;
+        //console.log("Current Turn = " + clients[currentTurn].username);
         //clients[currentTurn].send("IT IS " + clients[currentTurn].username + "'s turn");
         clients.forEach(function each(client) {
             client.send(JSON.stringify({
@@ -99,7 +98,7 @@ set = setInterval(function () {
             if (currentTurn > clients.length - 1)
                 currentTurn = 0;
 
-            while (clients[currentTurn].isConnected === false) {
+            while (clients[currentTurn].isConnected === false) {// && clients[currentTurn].username !== 'undefined') {
                 currentTurn++;
                 if (currentTurn > clients.length - 1)
                     currentTurn = 0;
@@ -147,11 +146,10 @@ wss.on("request", function (request) {
             }
             
             obj.inputLayout = board;
-
-            console.log("obj ID = " + obj._id);
-
-            clients.forEach(function each(client) {
-                //console.log("client ID = " + client.id);                
+            //logic.convert1D(obj.inputLayout);
+            var testUser = await logic.setClick(obj.username);
+            //console.log(testUser);
+            clients.forEach(function each(client) {         
                 if (client.id !== obj.id) {
                     console.log("sending to = " + client.id);
                     client.send(JSON.stringify({
@@ -166,15 +164,13 @@ wss.on("request", function (request) {
             })
         }
 
+        /*
         if ("commitedLayout" in obj) {
             obj = await logic.saveUserLayout(obj._id, obj.commitedLayout);
            // console.log("OBJECT " + obj);
             //console.log(await db.getBoard({ "name": "public" }));
         }
-
-        if ("userLayout" in obj) {
-            //console.log("USER LAYOUT " + obj.userLayout);
-        }
+        */
 
         if ("message" in obj) {
             console.log("user's colour " + obj.colour);
@@ -203,12 +199,6 @@ wss.on("request", function (request) {
     });
 
     connection.on("close", function (message) {
-
-        console.log(connection.id + " lost connection");
-
-        console.log("CONNECTION CLOSED " + message);
-        //clients.splice(clients.indexOf(connection.id), 1);
-
         clients.forEach(function each(client) {
             client.isConnected = false;
             client.send(JSON.stringify({

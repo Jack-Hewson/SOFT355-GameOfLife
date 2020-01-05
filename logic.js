@@ -38,21 +38,16 @@ async function newGame() {
 }
 
 async function saveLayout(gameId, layout) {
-    console.log("SAVE LAYOUT RUNNNIG");
     var game = await db.getBoard({ "_id": gameId });
-    
     game.layout = convert1D(layout);
-
     await game.save();
     return game;
 }
 
+/*
 async function saveUserLayout(gameId, layout) {
-    console.log("SAVE USER-LAYOUT RUNNNIG");
     var game = await db.getBoard({ "_id": gameId });
-    //game.inputLayout = convert1D(layout);
     var tempLayout;
-    console.log("GAME VALUE IS..." + game);
     var test = game.inputLayout;
     tempLayout = convert1D(layout);
     console.log("temp " + tempLayout);
@@ -68,14 +63,11 @@ async function saveUserLayout(gameId, layout) {
     console.log("NEW TEST " + test.length);
     console.log("GAME LENGTH " + game.inputLayout.length);
     game.inputLayout = test;
-    //console.log(game.inputLayout);
     await game.save;
     return game;
 }
-
+*/
 async function nextGen(layout) {
-    console.log("Calculating next generation");
-    
     boardNext = new Array(layout.length);
 
     for (var i = 0; i < layout.length; i++) {
@@ -106,11 +98,20 @@ async function nextGen(layout) {
             boardNext[x][y] = currentBlock;
         }
     }
-
     return boardNext;
 }
 
-module.exports.saveUserLayout = saveUserLayout;
+async function setClick(userId) {
+    var user = await db.getPlayer(userId);
+    user.clicks++;
+
+    await user.save();
+    return user;
+}
+
+//module.exports.convert1D = convert1D;
+module.exports.setClick = setClick;
+//module.exports.saveUserLayout = saveUserLayout;
 module.exports.nextGen = nextGen;
 module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;
