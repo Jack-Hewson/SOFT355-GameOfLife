@@ -199,18 +199,20 @@ gameModule.component("game", {
                     else {
                         console.log("This client SHOULD be clicking");
                         $('#canvas').css({ "pointer-events": "auto" });
+
+                        if (eventObject.counter >= 5) {
+                            setTimeout(function () {
+                                socket.send(JSON.stringify({
+                                    _id: $("#gameId").html(),
+                                    layout: canvas.board,
+                                    userLayout: inputCanvas.board,
+                                    userColour: document.getElementById("userId").style.color
+                                }))
+                            }, 1000);
+                        }
                     }
 
-                    if (eventObject.counter >= 5) {
-                        setTimeout(function () {
-                            socket.send(JSON.stringify({
-                                _id: $("#gameId").html(),
-                                layout: canvas.board,
-                                userLayout: inputCanvas.board,
-                                userColour: document.getElementById("userId").style.color
-                            }))
-                        }, 1000);
-                    }
+
                 }
             }
             catch (error) {
@@ -241,6 +243,7 @@ gameModule.component("game", {
 
                     socket.send(JSON.stringify({
                         _id: $("#gameId").html(),
+                        "username": $("#userId").text(),
                         "inputLayout": inputCanvas.board,
                         "colour": document.getElementById("userId").style.color
                     }));
