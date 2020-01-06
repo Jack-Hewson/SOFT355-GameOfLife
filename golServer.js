@@ -43,6 +43,7 @@ app.get("/newPlayer/:name/:colour/:id", async function (request, response) {
     var player = await db.setPlayer(name, colour);
     clients.forEach(function each(client) {
         if (client.id === userid) {
+            console.log("ADDING PLAYER");
             client.username = name;
         }
     });
@@ -77,10 +78,15 @@ set = setInterval(function () {
             if (currentTurn > clients.length - 1)
                 currentTurn = 0;
 
-            while (clients[currentTurn].isConnected === false || clients[currentTurn].username === 'undefined') {
-                currentTurn++;
-                if (currentTurn > clients.length - 1)
-                    currentTurn = 0;
+            while1: {
+                while (clients[currentTurn].isConnected === false || clients[currentTurn].username === undefined) {
+                    if (clients.length === 1)
+                        break while1;
+
+                    currentTurn++;
+                    if (currentTurn > clients.length - 1)
+                        currentTurn = 0;
+                }
             }
         }
     }
