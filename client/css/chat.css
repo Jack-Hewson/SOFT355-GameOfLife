@@ -1,0 +1,22 @@
+aside {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+}
+
+.messages {
+    flex: 1; /* Allows the message area to expand with viewport height */
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.controls {
+    /* Visual styles, not much layout */
+}
