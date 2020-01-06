@@ -144,10 +144,8 @@ gameModule.component("game", {
         var gridCol = Math.round(height / 25);
 
         socket.onmessage = function (event) {
-
             try {
                 var eventObject = JSON.parse(event.data)
-
                 if ("ping" in eventObject) {
                     socket.send(JSON.stringify({
                         "pong": eventObject.ping,
@@ -235,9 +233,10 @@ gameModule.component("game", {
                 }
 
                 if ("onlinePlayers" in eventObject) {
-                    eventObject.clients.forEach(function each(client) {
+                    $('#online').text("");
+                    eventObject.onlinePlayers.name.forEach(function (topClick, i) {
                         $('#online')
-                            .append($('<span>').css('color', client.chatColour).text(client.chatName))
+                            .append($('<span>').text(topClick))
                             .append($('<br>'));
                     })
                 }
@@ -309,6 +308,10 @@ gameModule.component("game", {
                 $http.get("/newPlayer/" + name + "/" + colour + "/" + userId).then(function (response) {
                     $("#onlinePlayers").html(response.data["name"] + " - clicks: " + response.data["click"]);
                 })
+
+                socket.send(JSON.stringify({
+                    "TESTER":1
+                }))
 
                 modal.style.display = "none";
             }
