@@ -32,7 +32,7 @@ async function newGame() {
     });
     
     await game.save();
-    console.log("saved");
+    //console.log("saved");
 
     return game;
 }
@@ -104,10 +104,33 @@ async function getColour(colour) {
     return colour;
 }
 
+async function setPlayer(name, colour) {
+    return await db.setPlayer(name, colour);
+}
+
+async function getPlayer(name) {
+    return await db.getPlayer(name);
+}
+
+async function getOnlinePlayers(clients) {
+    var onlinePlayers = {
+        "name": []
+    };
+
+    clients.forEach(function each(client, i) {
+        if (client.isConnected === true)
+            onlinePlayers.name[i] = client.username;
+    })
+
+    return onlinePlayers;
+}
+
+module.exports.getPlayer = getPlayer;
+module.exports.setPlayer = setPlayer;
+module.exports.getOnlinePlayers = getOnlinePlayers;
 module.exports.getColour = getColour;
 module.exports.convert1D = convert1D;
 module.exports.setClick = setClick;
-//module.exports.saveUserLayout = saveUserLayout;
 module.exports.nextGen = nextGen;
 module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;

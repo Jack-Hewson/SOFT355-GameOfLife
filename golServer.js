@@ -40,16 +40,21 @@ app.get("/newPlayer/:name/:colour/:id", async function (request, response) {
     var name = request.params.name;
     var userid = Number(request.params.id);
     var colour = await logic.getColour(request.params.colour);
-    var player = await db.setPlayer(name, colour);
+    var player = await logic.setPlayer(name, colour);
+
     clients.forEach(function each(client) {
         if (client.id === userid) {
-            console.log("ADDING PLAYER");
             client.username = name;
         }
     });
 
-    response.contentType("application/json");
-    response.send({ "name": player.name, "colour":player.colour,"clicks": player.clicks });
+    var onlinePlayers = await logic.getOnlinePlayers(clients);
+
+    clients.forEach(function each(client) {
+        client.send(JSON.stringify({
+            onlinePlayers
+        }));
+    })
 })
 
 // Initialise a HTTP server using the Express app.
@@ -93,16 +98,17 @@ set = setInterval(function () {
     catch (error) { }
 }, 1000);
 
-wss.on("request", function (request) {
+wss.on("request", async function (request) {
     console.log("Received request\n");
     // Store the connection in a variable.
     connection = request.accept(null, request.origin);
     connection.id = id;
+    connection.isConnected = true;
     id++;
     clients.push(connection);
     connection.send(JSON.stringify({
         "id": connection.id,
-        //"onlinePlayers": clients[0]
+        "onlinePlayers": await logic.getOnlinePlayers(clients)
     }))
 
     // Set up the message event handler.
@@ -163,6 +169,11 @@ wss.on("request", function (request) {
                     client.username = obj.username;
                 }
             });
+
+            connection.send(JSON.stringify({
+                "id": connection.id,
+                "onlinePlayers": await logic.getOnlinePlayers(clients)
+            }))
         }
     });
 

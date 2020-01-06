@@ -22,7 +22,6 @@ async function setPlayer(name,colour) {
         clicks : 0 
     })
 
-    console.log(player);
     player.save();
     return player;
 }
