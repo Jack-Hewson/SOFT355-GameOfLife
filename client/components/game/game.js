@@ -204,17 +204,20 @@ gameModule.component("game", {
 
                 if ("counter" in eventObject) {
                     $('#counter').text(eventObject.counter);
-                    $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
+                    if (eventObject.userTurn === undefined)
+                        $('#userTurn').text("Players needed to continue the game...");
+                    else
+                        $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
 
                     if (eventObject.userTurn !== $('#userId').text()) {
-                        console.log("This client should not be clicking");
                         $('#canvas').css({ "pointer-events": "none" });
                     }
                     else {
-                        console.log("This client SHOULD be clicking");
+                        
                         $('#canvas').css({ "pointer-events": "auto" });
 
                         if (eventObject.counter >= 5) {
+                            console.log("This client SHOULD be clicking");
                             setTimeout(function () {
                                 socket.send(JSON.stringify({
                                     _id: $("#gameId").html(),
@@ -321,8 +324,6 @@ gameModule.component("game", {
         $scope.sendMessage = function () {
             var userId = document.getElementById("userId");
             var message = document.getElementsByName("message")[0].value;
-
-            console.log("colour is " + userId.style.color);
 
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
