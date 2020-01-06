@@ -35,3 +35,30 @@
     text-decoration: none;
     cursor: pointer;
 }
+
+#main {
+    display: flex;
+}
+
+#leftSide {
+    width: 300px;
+    height: auto;
+}
+
+#rightSide {
+    width: 300px;
+    height: auto;
+}
+
+#heading {
+    margin: auto;
+    text-align: center;
+}
+
+title {
+    text-align: center;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}

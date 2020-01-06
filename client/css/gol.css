@@ -1,9 +1,8 @@
-#wrapper {
+#boards {
     position: relative;
     height: 500px;
     width: 700px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: auto;
 }
 
 #inputCanvas {

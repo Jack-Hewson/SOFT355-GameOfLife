@@ -12,7 +12,7 @@ function randomBoard() {
     return board;
 }
 
-function convert1D(layout) {
+async function convert1D(layout) {
     var board = new Array();
     height = 20;
     width = 28;
@@ -39,34 +39,11 @@ async function newGame() {
 
 async function saveLayout(gameId, layout) {
     var game = await db.getBoard({ "_id": gameId });
-    game.layout = convert1D(layout);
+    game.layout = await convert1D(layout);
     await game.save();
     return game;
 }
 
-/*
-async function saveUserLayout(gameId, layout) {
-    var game = await db.getBoard({ "_id": gameId });
-    var tempLayout;
-    var test = game.inputLayout;
-    tempLayout = convert1D(layout);
-    console.log("temp " + tempLayout);
-
-    for (var x = 0; x < game.layout.length; x++) {        
-        if (test[x] == 0 && tempLayout[x] == 1) {
-           console.log("x: " + x);
-            console.log("game = " + test[x]);
-           console.log("temp = " + tempLayout[x]);
-            test[x] = 1;
-       }
-    }
-    console.log("NEW TEST " + test.length);
-    console.log("GAME LENGTH " + game.inputLayout.length);
-    game.inputLayout = test;
-    await game.save;
-    return game;
-}
-*/
 async function nextGen(layout) {
     boardNext = new Array(layout.length);
 
@@ -109,7 +86,26 @@ async function setClick(userId) {
     return user;
 }
 
-//module.exports.convert1D = convert1D;
+async function getColour(colour) {
+    switch (colour) {
+        case "red":
+            colour = "rgb(255, 0, 0)"
+        case "orange":
+            colour = "rgb(255,165,0)"
+        case "yellow":
+            colour = "rgb(255,255,0)"
+        case "green":
+            colour = "rgb(0,128,0)"
+        case "blue":
+            colour = "rgb(0,0,255)"
+        case "purple":
+            colour = "rgb(128,0,128)"
+    }
+    return colour;
+}
+
+module.exports.getColour = getColour;
+module.exports.convert1D = convert1D;
 module.exports.setClick = setClick;
 //module.exports.saveUserLayout = saveUserLayout;
 module.exports.nextGen = nextGen;
