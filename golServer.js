@@ -18,32 +18,19 @@ app.get("/", function (request, response) {
 
 app.get("/initgame", async function (request, response) {
     var boards = await db.getBoard({ "name": "public" });
-    //console.log(boards.layout);
     response.contentType("application/json");
     response.send({ "gameId": boards._id, "layout": boards.layout });
-    //var id = [];
-    //boards.forEach(function (t) {
-    //    id.push(t);
-    //})
-    //console.log(id);
-    //response.contentType("application/json");
-    //response.send({ "gameId": boards._id, "layout": boards.layout });
 })
 
 app.get("/newgame", async function (request, response) {
     var board = await logic.newGame();
-    console.log("Created a new game: " + board._id);
     response.contentType("application/json");
     response.send({ "gameId": board._id, "layout": board.layout});
-    //var boards = await db.getBoards();
-    //console.log("BOARDS: " + boards);
 })
 
 app.get("/nextTurn/:gameId/:layout", async function (request, response) {
     var gameId = request.params.gameId;
     var layout = request.params.layout;
-    //console.log("RECEIVED LAYOUT: " + layout);
-
     var board = await logic.saveLayout(gameId, layout);
     response.contentType("application/json");
     response.send({ "gameId": board._id, "layout": board.layout });
@@ -51,23 +38,23 @@ app.get("/nextTurn/:gameId/:layout", async function (request, response) {
 
 app.get("/newPlayer/:name/:colour/:id", async function (request, response) {
     var name = request.params.name;
-    var colour = request.params.colour;
     var userid = Number(request.params.id);
-
-    var player = await db.setPlayer(name, colour);
+    var colour = await logic.getColour(request.params.colour);
+    var player = await logic.setPlayer(name, colour);
 
     clients.forEach(function each(client) {
-        console.log("client id = " + client.id + " and userid = " + userid);
-        console.log(client.id === userid)
         if (client.id === userid) {
-            console.log("Entering the dragon");
             client.username = name;
         }
     });
 
-    console.log(await db.getPlayer(name));
-    response.contentType("application/json");
-    response.send({ "name": player.name, "colour":player.colour,"clicks": player.clicks });
+    var onlinePlayers = await logic.getOnlinePlayers(clients);
+
+    clients.forEach(function each(client) {
+        client.send(JSON.stringify({
+            onlinePlayers
+        }));
+    })
 })
 
 // Initialise a HTTP server using the Express app.
@@ -80,12 +67,9 @@ var id = 1;
 var i = 0;
 var currentTurn = 0;
 
-set = setInterval(function () {
-    
-    i++;
+set = setInterval(function () {    
     try {
-        console.log("Current Turn = " + clients[currentTurn].username);
-        //clients[currentTurn].send("IT IS " + clients[currentTurn].username + "'s turn");
+        i++;
         clients.forEach(function each(client) {
             client.send(JSON.stringify({
                 "counter": i,
@@ -99,25 +83,32 @@ set = setInterval(function () {
             if (currentTurn > clients.length - 1)
                 currentTurn = 0;
 
-            while (clients[currentTurn].isConnected === false) {
-                currentTurn++;
-                if (currentTurn > clients.length - 1)
-                    currentTurn = 0;
+            while1: {
+                while (clients[currentTurn].isConnected === false || clients[currentTurn].username === undefined) {
+                    if (clients.length === 1)
+                        break while1;
+
+                    currentTurn++;
+                    if (currentTurn > clients.length - 1)
+                        currentTurn = 0;
+                }
             }
         }
     }
     catch (error) { }
 }, 1000);
 
-wss.on("request", function (request) {    
-    console.log("Received request");
+wss.on("request", async function (request) {
+    console.log("Received request\n");
     // Store the connection in a variable.
     connection = request.accept(null, request.origin);
     connection.id = id;
+    connection.isConnected = true;
     id++;
     clients.push(connection);
     connection.send(JSON.stringify({
-        "id": connection.id
+        "id": connection.id,
+        "onlinePlayers": await logic.getOnlinePlayers(clients)
     }))
 
     // Set up the message event handler.
@@ -139,47 +130,30 @@ wss.on("request", function (request) {
         }
 
         if ("inputLayout" in obj) {
-            var board = new Array();
-            height = 20;
-            width = 28;
-            for (var x = 0; x < obj.inputLayout.length; x++) {
-                board = board.concat(obj.inputLayout[x]);
-            }
-            
-            obj.inputLayout = board;
+            var personalUser = await logic.setClick(obj.username);
+            var topClicks = await db.getTop5Clickers()
 
-            console.log("obj ID = " + obj._id);
+            obj.inputLayout = await logic.convert1D(obj.inputLayout);
 
-            clients.forEach(function each(client) {
-                //console.log("client ID = " + client.id);                
+            clients.forEach(function each(client) {         
                 if (client.id !== obj.id) {
-                    console.log("sending to = " + client.id);
                     client.send(JSON.stringify({
                         "playerId": obj.id,
                         "userLayout": obj.inputLayout,
-                        "colour": obj.colour
+                        "colour": obj.colour,
+                        "topClicks": topClicks
                     }));
                 }
-                else {
-                    console.log("NOT sending to = " + client.id);   
+                if (client.username === obj.username) {
+                    client.send(JSON.stringify({
+                        "personalClick": personalUser.clicks
+                    }));
                 }
+
             })
         }
-
-        if ("commitedLayout" in obj) {
-            obj = await logic.saveUserLayout(obj._id, obj.commitedLayout);
-           // console.log("OBJECT " + obj);
-            //console.log(await db.getBoard({ "name": "public" }));
-        }
-
-        if ("userLayout" in obj) {
-            //console.log("USER LAYOUT " + obj.userLayout);
-        }
-
         if ("message" in obj) {
-            console.log("user's colour " + obj.colour);
             clients.forEach(function each(client) {
-                console.log("client ID = " + client.id);
                 client.send(JSON.stringify({
                     "chatName": obj.name,
                     "chatColour": obj.colour,
@@ -189,26 +163,21 @@ wss.on("request", function (request) {
         }
 
         if ("pong" in obj) {
-            console.log("PONG RECEIVED FROM " + obj.pong + " " + obj.username);
-
             clients.forEach(function each(client) {
                 if (client.id === obj.pong) {
                     client.isConnected = true;
                     client.username = obj.username;
                 }
-
-                console.log("client " + client.id + " : " + client.isConnected);
             });
+
+            connection.send(JSON.stringify({
+                "id": connection.id,
+                "onlinePlayers": await logic.getOnlinePlayers(clients)
+            }))
         }
     });
 
     connection.on("close", function (message) {
-
-        console.log(connection.id + " lost connection");
-
-        console.log("CONNECTION CLOSED " + message);
-        //clients.splice(clients.indexOf(connection.id), 1);
-
         clients.forEach(function each(client) {
             client.isConnected = false;
             client.send(JSON.stringify({
@@ -216,10 +185,6 @@ wss.on("request", function (request) {
             }));
         })
     });
-
-    //connection.on("pong", function (message) {
-    //    console.log("Pong received from " + connection.id);
-    //});
 
     connection.on("error", function (message) {
         console.log("ERROR " + message);

@@ -1,36 +1,117 @@
 <section id="game" ng-init="initGame()">
-    <p id="welcome"><span id="userId"></span> joined public game <span id="gameId"></span></p>
 
-    <p id="counter"></p>
-    <h2 id="userTurn"></h2>
-
-    <div id="wrapper">
-        <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
-        <canvas id="inputCanvas" height="500" width="700">Canvas not supported</canvas>
+    <div id="heading">
+        <p id="welcome"><span id="userId"></span> joined public game <span id="gameId"></span></p>
+        <h2 id="userTurn">Players needed to continue the game...</h2>
+        <h1 id="counter">0</h1>        
+        <p id="onlinePlayer"></p>
+        <button id="modalBtn" ng-click="newPlayer()">Open Modal</button>
     </div>
 
-    <!--<button id="new" ng-click="newGame()">New Game</button>-->
-    <!--<button id="next" ng-click="nextTurn()">Next Turn</button>-->
-    <!--<button id="commit" ng-click="commit()">Commit</button>-->
-    <p id="openBoards"></p>
-    <p id="onlinePlayer"></p>
-    <button id="modalBtn" ng-click="newPlayer()">Open Modal</button>
+    <div id="main">
+        <div id="leftSide">
+            <div id="scoreContainer">
+                <div class="row">
+                    <div class="name" id="firstPlaceName">1st</div><div class="score" id="firstPlaceScore">100</div>
+                </div>
+                <div class="row">
+                    <div class="name" id="secondPlaceName">2nd</div><div class="score" id="secondPlaceScore">99</div>
+                </div>
+                <div class="row">
+                    <div class="name" id="thirdPlaceName">3rd</div><div class="score" id="thirdPlaceScore">98</div>
+                </div>
+                <div class="row">
+                    <div class="name" id="fourthPlaceName">4th</div><div class="score" id="fourthPlaceScore">97</div>
+                </div>
+                <div class="row">
+                    <div class="name" id="fifthPlaceName">5th</div><div class="score" id="fifthPlaceScore">96</div>
+                </div>
+                <div class="row">
+                    <div class="name" id="userPlaceName">Jack</div><div class="score" id="userPlaceScore">50</div>
+                </div>
+            </div>
 
-    <div id="userModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <form>
-                Enter Player Name:<br />
-                <input type="text" name="playerName" placeholder="Username" />
-                <input type="text" name="playerColour" placeholder="Colour" />
-                <input type="submit" id="submitPlayer" value="Submit" />
-            </form>
+            <aside id="chatSection">
+                <div class="header">
+                    <h1> live chat</h1>
+                </div>
+
+                <div id="chat" class="messages">
+                </div>
+
+                <div class="controls">
+                    <form id="textentry">
+                        <input id="message" type="text" placeholder="message" name="message" />
+                        <button id="send" ng-click="sendMessage()">Send</button>
+                    </form>
+                </div>
+            </aside>
         </div>
-    </div>
 
-    <div>
-        <div id="chat"></div>
-        <input id="message" type="text" placeholder="message" name="message" />
-        <button id="send" ng-click="sendMessage()">Send</button>
+        <div id="boards">
+            <canvas id="canvas" height="500" width="700">Canvas not supported</canvas>
+            <canvas id="inputCanvas" height="500" width="700">Canvas not supported</canvas>
+        </div>
+
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <form>
+                    Enter Player Name:<br />
+                    <input type="text" name="playerName" placeholder="Username" />
+
+                    <br /><br />Select Your Colour:<br />
+
+                    <div id="colourSelector">
+                        <label class="colourContainer">
+                            Red
+                            <input type="radio" id="red" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <label class="colourContainer">
+                            Orange
+                            <input type="radio" id="Orange" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <label class="colourContainer">
+                            Yellow
+                            <input type="radio" id="Yellow" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <label class="colourContainer">
+                            Green
+                            <input type="radio" id="Green" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <label class="colourContainer">
+                            Blue
+                            <input type="radio" id="Blue" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                        <br />
+                        <label class="colourContainer">
+                            Purple
+                            <input type="radio" id="Purple" name="radioColour">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+
+                    <input type="submit" id="submitPlayer" value="Submit" />
+                </form>
+            </div>
+        </div>
+
+        <div id="rightSide">
+            <div class="header">
+                <h1>Online Players</h1>
+            </div>
+            <div id="online">
+            </div>
+        </div>
+
     </div>
 </section>

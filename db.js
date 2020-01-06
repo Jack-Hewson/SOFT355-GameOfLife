@@ -4,7 +4,7 @@ var schemas = require("./schemas");
 //'async' specifies that the function is asynchronous
 //'await' will wait for the query to run so a promise is not needed
 async function getPlayer(name) {
-    await schemas.Player.findOne({"name": name})
+    return await schemas.Player.findOne({"name": name})
 }
 
 async function getBoard(query) {
@@ -22,11 +22,18 @@ async function setPlayer(name,colour) {
         clicks : 0 
     })
 
-    console.log(player);
     player.save();
     return player;
 }
 
+async function getTop5Clickers() {
+    return await schemas.Player.aggregate([
+        { $sort: {clicks:-1}},
+        {$limit: 5 }
+    ])
+}
+
+module.exports.getTop5Clickers = getTop5Clickers;
 module.exports.setPlayer = setPlayer;
 module.exports.getBoards = getBoards;
 module.exports.getPlayer = getPlayer;

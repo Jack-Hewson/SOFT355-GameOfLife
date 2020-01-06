@@ -12,7 +12,7 @@ function randomBoard() {
     return board;
 }
 
-function convert1D(layout) {
+async function convert1D(layout) {
     var board = new Array();
     height = 20;
     width = 28;
@@ -32,50 +32,19 @@ async function newGame() {
     });
     
     await game.save();
-    console.log("saved");
+    //console.log("saved");
 
     return game;
 }
 
 async function saveLayout(gameId, layout) {
-    console.log("SAVE LAYOUT RUNNNIG");
     var game = await db.getBoard({ "_id": gameId });
-    
-    game.layout = convert1D(layout);
-
+    game.layout = await convert1D(layout);
     await game.save();
     return game;
 }
 
-async function saveUserLayout(gameId, layout) {
-    console.log("SAVE USER-LAYOUT RUNNNIG");
-    var game = await db.getBoard({ "_id": gameId });
-    //game.inputLayout = convert1D(layout);
-    var tempLayout;
-    console.log("GAME VALUE IS..." + game);
-    var test = game.inputLayout;
-    tempLayout = convert1D(layout);
-    console.log("temp " + tempLayout);
-
-    for (var x = 0; x < game.layout.length; x++) {        
-        if (test[x] == 0 && tempLayout[x] == 1) {
-           console.log("x: " + x);
-            console.log("game = " + test[x]);
-           console.log("temp = " + tempLayout[x]);
-            test[x] = 1;
-       }
-    }
-    console.log("NEW TEST " + test.length);
-    console.log("GAME LENGTH " + game.inputLayout.length);
-    game.inputLayout = test;
-    //console.log(game.inputLayout);
-    await game.save;
-    return game;
-}
-
 async function nextGen(layout) {
-    console.log("Calculating next generation");
-    
     boardNext = new Array(layout.length);
 
     for (var i = 0; i < layout.length; i++) {
@@ -106,11 +75,62 @@ async function nextGen(layout) {
             boardNext[x][y] = currentBlock;
         }
     }
-
     return boardNext;
 }
 
-module.exports.saveUserLayout = saveUserLayout;
+async function setClick(userId) {
+    var user = await db.getPlayer(userId);
+    user.clicks++;
+
+    await user.save();
+    return user;
+}
+
+async function getColour(colour) {
+    switch (colour) {
+        case "red":
+            colour = "rgb(255, 0, 0)"
+        case "orange":
+            colour = "rgb(255,165,0)"
+        case "yellow":
+            colour = "rgb(255,255,0)"
+        case "green":
+            colour = "rgb(0,128,0)"
+        case "blue":
+            colour = "rgb(0,0,255)"
+        case "purple":
+            colour = "rgb(128,0,128)"
+    }
+    return colour;
+}
+
+async function setPlayer(name, colour) {
+    return await db.setPlayer(name, colour);
+}
+
+async function getPlayer(name) {
+    return await db.getPlayer(name);
+}
+
+async function getOnlinePlayers(clients) {
+    var onlinePlayers = {
+        "name": []
+    };
+
+    clients.forEach(function each(client, i) {
+        if (client.isConnected === true)
+            onlinePlayers.name[i] = client.username;
+    })
+
+    return onlinePlayers;
+}
+
+module.exports.getPlayer = getPlayer;
+module.exports.setPlayer = setPlayer;
+module.exports.getOnlinePlayers = getOnlinePlayers;
+module.exports.getColour = getColour;
+module.exports.convert1D = convert1D;
+module.exports.setClick = setClick;
 module.exports.nextGen = nextGen;
 module.exports.saveLayout = saveLayout;
 module.exports.newGame = newGame;

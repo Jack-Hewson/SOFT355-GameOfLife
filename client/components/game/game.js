@@ -144,12 +144,8 @@ gameModule.component("game", {
         var gridCol = Math.round(height / 25);
 
         socket.onmessage = function (event) {
-            //console.log("MESSAGE FROM SERVER RECEIVED");
-            //console.log(event.data);
-
             try {
                 var eventObject = JSON.parse(event.data)
-
                 if ("ping" in eventObject) {
                     socket.send(JSON.stringify({
                         "pong": eventObject.ping,
@@ -159,7 +155,7 @@ gameModule.component("game", {
 
                 if ("layout" in eventObject) {
                     canvas = processCanvas(canvas, eventObject.layout);
-                    console.log("Message from server: '" + eventObject._id + "'");
+                    //console.log("Message from server: '" + eventObject._id + "'");
                     canvas.print(canvas.ctx, 25, 25, "#ffa500");
                     inputCanvas.initEmpty(gridRows, gridCol);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
@@ -171,10 +167,27 @@ gameModule.component("game", {
                 }
 
                 if ("userLayout" in eventObject) {
-                    //console.log("Player " + eventObject.playerId + " has done this " + eventObject.userLayout);
-                    //console.log(eventObject.userLayout);
+                    eventObject.topClicks.forEach(function (topClick,i) {
+                        switch (i) {
+                            case 0:
+                                $('#firstPlaceName').text(topClick.name);
+                                $('#firstPlaceScore').text(topClick.clicks);
+                            case 1:
+                                $('#secondPlaceName').text(topClick.name);
+                                $('#secondPlaceScore').text(topClick.clicks);
+                            case 2:
+                                $('#thirdPlaceName').text(topClick.name);
+                                $('#thirdPlaceScore').text(topClick.clicks);
+                            case 3:
+                                $('#fourthPlaceName').text(topClick.name);
+                                $('#fourthPlaceScore').text(topClick.clicks);
+                            case 4:
+                                $('#fifthPlaceName').text(topClick.name);
+                                $('#fifthPlaceScore').text(topClick.clicks);
+                        }
+                    })
+
                     inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
-                    //console.log(inputCanvas.board);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
                 }
 
@@ -183,34 +196,49 @@ gameModule.component("game", {
                     //document.getElementById("chat").innerHTML += eventObject.chatName.fontcolor(eventObject.chatColour) + ": " + eventObject.chatMessage + "<br>";
                     $('#chat')
                         .append($('<span>').css('color', eventObject.chatColour).text(eventObject.chatName))
-                        .append($('<span>').text(": " + eventObject.chatMessage))
+                        .append($('<span>').text(eventObject.chatMessage))
                         .append($('<br>'));
                 }
 
                 if ("counter" in eventObject) {
                     $('#counter').text(eventObject.counter);
-                    $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
+                    if (eventObject.userTurn === undefined)
+                        $('#userTurn').text("Players needed to continue the game...");
+                    else
+                        $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
 
                     if (eventObject.userTurn !== $('#userId').text()) {
-                        console.log("This client should not be clicking");
                         $('#canvas').css({ "pointer-events": "none" });
-                        //pointer - events: none;
                     }
                     else {
-                        console.log("This client SHOULD be clicking");
+                        
                         $('#canvas').css({ "pointer-events": "auto" });
-                    }
 
-                    if (eventObject.counter >= 5) {
-                        setTimeout(function () {
-                            socket.send(JSON.stringify({
-                                _id: $("#gameId").html(),
-                                layout: canvas.board,
-                                userLayout: inputCanvas.board,
-                                userColour: document.getElementById("userId").style.color
-                            }))
-                        }, 1000);
+                        if (eventObject.counter >= 5) {
+                            console.log("This client SHOULD be clicking");
+                            setTimeout(function () {
+                                socket.send(JSON.stringify({
+                                    _id: $("#gameId").html(),
+                                    layout: canvas.board,
+                                    userLayout: inputCanvas.board,
+                                    userColour: document.getElementById("userId").style.color
+                                }))
+                            }, 1000);
+                        }
                     }
+                }
+
+                if ("personalClick" in eventObject) {
+                    $('#userPlaceScore').text(eventObject.personalClick);
+                }
+
+                if ("onlinePlayers" in eventObject) {
+                    $('#online').text("");
+                    eventObject.onlinePlayers.name.forEach(function (topClick, i) {
+                        $('#online')
+                            .append($('<span>').text(topClick))
+                            .append($('<br>'));
+                    })
                 }
             }
             catch (error) {
@@ -219,14 +247,9 @@ gameModule.component("game", {
             }
         }
 
-        socket.onclose = function() { 
-            socket.send("BYE BYE");
-        }
-
         //Add functions to the scope
         $scope.initGame = function () {
             $http.get("/initgame").then(function (response) {
-                $("#openBoards").html(response.data["gameId"]);
                 $("#gameId").html(response.data["gameId"]);
                 canvas = processCanvas(canvas, response.data["layout"]);
                 console.log(canvas);
@@ -237,59 +260,18 @@ gameModule.component("game", {
                     [x, y] = getMousePosition(canvas, e);
                     layout = determineXY(canvas, x, y);
                     inputCanvas = addToInputCanvas(inputCanvas, layout);
-                    inputCanvas.print(inputCanvas.ctx, 25, 25, "#0000ff");
+                    inputCanvas.print(inputCanvas.ctx, 25, 25, "rgba(255,0,0,0)");
 
                     socket.send(JSON.stringify({
                         _id: $("#gameId").html(),
+                        "username": $("#userId").text(),
                         "inputLayout": inputCanvas.board,
                         "colour": document.getElementById("userId").style.color
                     }));
                 });
-            })
-
-
-           
+            })          
         }
-        /*
-        $scope.newGame = function () {
-            //Initialise a new game
-            $http.get("/newgame").then(function (response) {
-                $("#gameId").html(response.data["gameId"]);
 
-                //socket.send("Hello world from the angularJS client: gameId is '" + response.data["layout"] + "'");
-                processCanvas(canvas, response.data["layout"]);
-                canvas.print(canvas.ctx, 25, 25, "#ffa500");
-            });
-        }
-        */
-        /*
-        $scope.nextTurn = function () {
-            $("#next").attr("disable", true);
-            var layout = canvas.board;
-            //console.log("CANVAS " + layout);
-            //var uri = "/nextTurn/" + gameId + "/" + layout;
-
-            //$http.get(uri).then(function (response) {
-            //    console.log(response);
-            //})
-
-            socket.send(JSON.stringify({
-                _id: $("#gameId").html(),
-                layout: canvas.board,
-                userLayout: inputCanvas.board,
-                userColour: document.getElementById("userId").style.color
-            }))
-        }
-        */
-        /*
-        $scope.commit = function () {
-            console.log("COMMITED " + inputCanvas.board);
-            socket.send(JSON.stringify({
-                _id: $("#gameId").html(),
-                "commitedLayout": inputCanvas.board
-            }));
-        }
-        */
         $scope.newPlayer = function () {
             //Get the modal
             var modal = document.getElementById("userModal");
@@ -309,15 +291,27 @@ gameModule.component("game", {
 
             submit.onclick = function () {
                 var name = document.getElementsByName("playerName")[0].value;
-                var colour = document.getElementsByName("playerColour")[0].value;
+                
                 var username = document.getElementById("userId");
+                var colour;
+
+                $('#colourSelector input:radio').each(function (index) {
+                    if ($(this)[0].checked === true)
+                        colour = $(this)[0].id;
+                });
 
                 username.innerHTML = name;
                 username.style.color = colour;
 
+                $('#userPlaceName').text(username.innerHTML);
+
                 $http.get("/newPlayer/" + name + "/" + colour + "/" + userId).then(function (response) {
                     $("#onlinePlayers").html(response.data["name"] + " - clicks: " + response.data["click"]);
                 })
+
+                socket.send(JSON.stringify({
+                    "TESTER":1
+                }))
 
                 modal.style.display = "none";
             }
@@ -333,8 +327,6 @@ gameModule.component("game", {
         $scope.sendMessage = function () {
             var userId = document.getElementById("userId");
             var message = document.getElementsByName("message")[0].value;
-
-            console.log("colour is " + userId.style.color);
 
             socket.send(JSON.stringify({
                 _id: $("#gameId").html(),
