@@ -228,6 +228,10 @@ gameModule.component("game", {
                     }
                 }
 
+                if ("typingUser" in eventObject) {
+                    $('.typingPlayer').text(eventObject.typingUser + " is typing...");
+                }
+
                 if ("personalClick" in eventObject) {
                     $('#userPlaceScore').text(eventObject.personalClick);
                 }
@@ -255,6 +259,8 @@ gameModule.component("game", {
                 console.log(canvas);
                 canvas.print(canvas.ctx, 25, 25, "#ffa500");
                 inputCanvas.initEmpty(gridRows, gridCol);
+                var chatTextbox = $('#message');
+                var typingTimeout;
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
                     [x, y] = getMousePosition(canvas, e);
@@ -269,6 +275,22 @@ gameModule.component("game", {
                         "colour": document.getElementById("userId").style.color
                     }));
                 });
+
+                chatTextbox.keypress(function () {
+                    //console.log("KEY PRESSED");
+                   // if (typingTimeout !== undefined)
+                     //   clearTimeout(typingTimeout);
+
+                    socket.send(JSON.stringify({
+                        "typingUser": $("#userId").text(),
+                    }));
+
+                    //typingTimeout = setTimeout(function () {
+                    //    console.log("SKRRRT");
+                    //}, 1000);
+                })
+
+
             })          
         }
 
