@@ -20,3 +20,13 @@ aside {
 .controls {
     /* Visual styles, not much layout */
 }
+
+.typingPlayer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+#chat {
+    position: relative;
+}
