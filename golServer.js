@@ -175,6 +175,16 @@ wss.on("request", async function (request) {
                 "onlinePlayers": await logic.getOnlinePlayers(clients)
             }))
         }
+
+        if ("typingUser" in obj) {
+            clients.forEach(function each(client) {
+                if (client.username !== obj.typingUser) {
+                    client.send(JSON.stringify({
+                        "typingUser": obj.typingUser
+                    }))
+                }                
+            })
+        }
     });
 
     connection.on("close", function (message) {
