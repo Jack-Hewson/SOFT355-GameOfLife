@@ -26,10 +26,13 @@ async function removeBoard(id) {
 
 async function getPlayerLogin(name, password) {
     var user = await schemas.Player.findOne({ "name": name });
-    if (bcrypt.compareSync(password, user.password) === true)
-        return user;
-    else
+    try {
+        if (bcrypt.compareSync(password, user.password) === true)
+            return user;
+    }
+    catch (error) {
         return false;
+    }        
 }
 
 async function setPlayer(name, password, colour) {

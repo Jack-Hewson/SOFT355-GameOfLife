@@ -44,9 +44,14 @@ async function getBoard(query) {
 }
 
 async function saveLayout(gameId, layout) {
-    var game = await db.getBoard({ "_id": gameId });
-    game.layout = await convert1D(layout);
-    await game.save();
+    try {
+        var game = await db.getBoard({ "_id": gameId });
+        game.layout = await convert1D(layout);
+        await game.save();
+    }
+    catch (error) {
+        console.log(error);
+    }
     return game;
 }
 
@@ -135,8 +140,12 @@ async function checkUsernamePresent(name) {
         return false;
 }
 
+function checkBlankSpaces(text) {
+    return /\s/.test(text);
+}
+
 async function setPlayer(name,password, colour) {
-    if (checkUsernameRegEx(name) === true && await checkUsernamePresent(name) === true) {
+    if (checkUsernameRegEx(name) === true && await checkUsernamePresent(name) === true && checkBlankSpaces(password) === false) {
 
         return await db.setPlayer(name, password, colour);
     }
@@ -146,8 +155,7 @@ async function setPlayer(name,password, colour) {
 
 async function getPlayerLogin(name, password) {
     var user = await db.getPlayerLogin(name, password);
-
-    if (user === true)
+    if (typeof (user) === "object")
         return user;
     else
         return false;

@@ -142,6 +142,7 @@ gameModule.component("game", {
         var height = document.getElementById("canvas").height
         var gridRows = Math.round(width / 25);
         var gridCol = Math.round(height / 25);
+        var typingTimeout;
 
         socket.onmessage = function (event) {
             try {
@@ -165,7 +166,12 @@ gameModule.component("game", {
                 }
 
                 if ("userLayout" in eventObject) {
-                    eventObject.topClicks.forEach(function (topClick,i) {
+                    inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
+                    inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
+                }
+
+                if ("topClicks" in eventObject) {
+                    eventObject.topClicks.forEach(function (topClick, i) {
                         switch (i) {
                             case 0:
                                 $('#firstPlaceName').text(topClick.name);
@@ -184,13 +190,9 @@ gameModule.component("game", {
                                 $('#fifthPlaceScore').text(topClick.clicks);
                         }
                     })
-
-                    inputCanvas = processCanvas(inputCanvas, eventObject.userLayout);
-                    inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
                 }
 
                 if ("chatName" in eventObject) {
-                    console.log(eventObject.chatColour);
                     //document.getElementById("chat").innerHTML += eventObject.chatName.fontcolor(eventObject.chatColour) + ": " + eventObject.chatMessage + "<br>";
                     $('#chat')
                         .append($('<span>').css('color', eventObject.chatColour).text(eventObject.chatName))
@@ -200,11 +202,16 @@ gameModule.component("game", {
 
                 if ("counter" in eventObject) {
                     $('#counter').text(eventObject.counter);
-                    if (eventObject.userTurn === undefined)
-                        $('#userTurn').text("Players needed to continue the game...");
-                    else
-                        $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
 
+                    if (eventObject.userTurn === undefined || eventObject.userTurn === "") {
+                        console.log(eventObject.userTurn);
+                        $('#userTurn').text("Players needed to continue the game...");
+                    }
+                    else {
+
+                        console.log(eventObject.userTurn);
+                        $('#userTurn').text("It is currently " + eventObject.userTurn + "'s turn");
+                    }
                     if (eventObject.userTurn !== $('#userId').text()) {
                         $('#canvas').css({ "pointer-events": "none" });
                     }
@@ -228,15 +235,22 @@ gameModule.component("game", {
 
                 if ("typingUser" in eventObject) {
                     $('.typingPlayer').text(eventObject.typingUser + " is typing...");
+                    if (typingTimeout !== undefined)
+                        clearTimeout(typingTimeout);
+
+                    typingTimeout = setTimeout(function () {
+                        $('.typingPlayer').text("");
+                    }, 1000);
                 }
 
                 if ("personalClick" in eventObject) {
                     $('#userPlaceScore').text(eventObject.personalClick);
                 }
 
-                if ("onlinePlayers" in eventObject) {
+                if ("onlinePlayers" in eventObject) {                    
                     $('#online').text("");
                     eventObject.onlinePlayers.name.forEach(function (topClick, i) {
+                        console.log("USERNAME " + topClick);
                         $('#online')
                             .append($('<span>').text(topClick))
                             .append($('<br>'));
@@ -262,7 +276,6 @@ gameModule.component("game", {
                 canvas.print(canvas.ctx, 25, 25, "#ffa500");
                 inputCanvas.initEmpty(gridRows, gridCol);
                 var chatTextbox = $('#message');
-                var typingTimeout;
 
                 canvas.canvas.addEventListener("mousedown", function (e) {
                     [x, y] = getMousePosition(canvas, e);
@@ -270,29 +283,23 @@ gameModule.component("game", {
                     inputCanvas = addToInputCanvas(inputCanvas, layout);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, "rgba(255,0,0,0)");
 
-                    socket.send(JSON.stringify({
-                        _id: $("#gameId").html(),
-                        "username": $("#userId").text(),
-                        "inputLayout": inputCanvas.board,
-                        "colour": document.getElementById("userId").style.color
-                    }));
+                    if ($("#userId").text() !== "" && $("#userId").text() !== undefined && $("#userId").text() !== null) {
+                        socket.send(JSON.stringify({
+                            _id: $("#gameId").html(),
+                            "username": $("#userId").text(),
+                            "inputLayout": inputCanvas.board,
+                            "colour": document.getElementById("userId").style.color
+                        }));
+                    }                    
                 });
 
                 chatTextbox.keypress(function () {
-                    //console.log("KEY PRESSED");
-                   // if (typingTimeout !== undefined)
-                     //   clearTimeout(typingTimeout);
-
-                    socket.send(JSON.stringify({
-                        "typingUser": $("#userId").text(),
-                    }));
-
-                    //typingTimeout = setTimeout(function () {
-                    //    console.log("SKRRRT");
-                    //}, 1000);
+                    if ($("#userId").text() !== "" && $("#userId").text() !== undefined && $("#userId").text() !== null) {
+                        socket.send(JSON.stringify({
+                            "typingUser": $("#userId").text(),
+                        }));
+                    }
                 })
-
-
             })          
         }
 
@@ -319,10 +326,15 @@ gameModule.component("game", {
                 var password = document.getElementsByName("playerPassword")[0].value;
                 try {
                     $http.get("/signInPlayer/" + name + "/" + password + "/" + userId).then(function (response) {
-                        $("#onlinePlayers").text(response.data["name"]);
-                        $('#userId').css('color', response.data["colour"]).text(response.data["name"]);
-                        $('#userPlaceName').text(response.data["name"]);
-                        modal.style.display = "none";
+       
+                        if (response.data["success"] === false)
+                            window.alert("Login not found");
+                        else {
+                            $("#onlinePlayers").text(response.data["name"]);
+                            $('#userId').css('color', response.data["colour"]).text(response.data["name"]);
+                            $('#userPlaceName').text(response.data["name"]);
+                            modal.style.display = "none";
+                        }
                     });
                 }
                 catch (error) {
@@ -340,21 +352,30 @@ gameModule.component("game", {
                         colour = $(this)[0].id;
                 });
 
-                $http.get("/newPlayer/" + name + "/" + colour + "/" + userId + "/" + password).then(function (response) {
-                    $("#onlinePlayers").html(response.data["success"]);
+                if (/\s/.test(password) === false) {
+                    if (name !== undefined && password !== "" && colour !== undefined) {
+                        $http.get("/newPlayer/" + name + "/" + colour + "/" + userId + "/" + password).then(function (response) {
+                            $("#onlinePlayers").html(response.data["success"]);
 
-                    if (response.data["success"] === true) {
-                        modal.style.display = "none";
+                            if (response.data["success"] === true) {
+                                modal.style.display = "none";
 
-                        $('#userId').css('color', colour).text(name);
-                        $('#userPlaceName').text(name);
-                       
+                                $('#userId').css('color', colour).text(name);
+                                $('#userPlaceName').text(name);
+
+                            }
+                            else
+                                window.alert("Please no special characters or spaces in your name.\nOtherwise the name is already taken");
+                        })
                     }
-                    else
-                        window.alert("Please no special characters or spaces in your name.\nOtherwise the name is already taken");
-                })                
+                    else {
+                        window.alert("Please make sure to enter a username, password, and select a colour");
+                    }
+                }
+                else {
+                    window.alert("Please have no spaces in your password");
+                }
             }
-
             //close the modal when the user clicks anywhere else
             window.onclick = function (event) {
                 if (event.target == modal) {
@@ -367,12 +388,16 @@ gameModule.component("game", {
             var userId = document.getElementById("userId");
             var message = document.getElementsByName("message")[0].value;
 
-            socket.send(JSON.stringify({
-                _id: $("#gameId").html(),
-                name: userId.innerHTML,
-                colour: userId.style.color,
-                message: message
-            }));
+            if ($("#userId").text() !== "" && $("#userId").text() !== undefined && $("#userId").text() !== null) {
+                socket.send(JSON.stringify({
+                    _id: $("#gameId").html(),
+                    name: userId.innerHTML,
+                    colour: userId.style.color,
+                    message: message
+                }));
+            }
+
+            document.getElementsByName("message")[0].value = "";
         }
     }
 })

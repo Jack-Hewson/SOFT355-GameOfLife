@@ -49,28 +49,32 @@ app.get("/signInPlayer/:name/:password/:userId", async function (request, respon
     var name = request.params.name;
     var password = request.params.password;
     var userid = Number(request.params.userId);
-
     var user = await logic.getPlayerLogin(name, password);
-    var success;
 
     if (user === false) {
         response.contentType("application/json");
-        response.send({ "success": success });
+        response.send({ "success": false });
     }
     else {
-        clients.forEach(function each(client) {
+        clients.forEach(async function each(client) {
             if (client.id === userid) {
-                client.username = name;
-                console.log("clients  " + client.username);
+                client.username = name
+
+                client.send(JSON.stringify({
+                    "personalClick": user.clicks
+                }));
             }
+
         });
+
         var onlinePlayers = await logic.getOnlinePlayers(clients);
 
-        clients.forEach(function each(client) {
+        clients.forEach(async function each(client) {
             client.send(JSON.stringify({
                 onlinePlayers
             }));
-        })
+        });
+        
         response.contentType("application/json");
         response.send({ "name": user.name, "colour": user.colour, "clicks": user.clicks });
     }
@@ -154,9 +158,11 @@ wss.on("request", async function (request) {
     connection.isConnected = true;
     id++;
     clients.push(connection);
+    var topClicks = await db.getTop5Clickers()
     connection.send(JSON.stringify({
         "id": connection.id,
-        "onlinePlayers": await logic.getOnlinePlayers(clients)
+        "onlinePlayers": await logic.getOnlinePlayers(clients),
+        "topClicks": topClicks
     }))
 
     // Set up the message event handler.
@@ -217,11 +223,6 @@ wss.on("request", async function (request) {
                     client.username = obj.username;
                 }
             });
-
-            connection.send(JSON.stringify({
-                "id": connection.id,
-                "onlinePlayers": await logic.getOnlinePlayers(clients)
-            }))
         }
 
         if ("typingUser" in obj) {
@@ -242,6 +243,15 @@ wss.on("request", async function (request) {
                 "ping": client.id
             }));
         })
+
+        setTimeout(function () {
+            clients.forEach(async function each(client) {
+                client.send(JSON.stringify({
+                    "id": connection.id,
+                    "onlinePlayers": await logic.getOnlinePlayers(clients)
+                }))
+            })
+        }, 1000);
     });
 
     connection.on("error", function (message) {
