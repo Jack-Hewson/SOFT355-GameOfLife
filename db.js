@@ -1,10 +1,15 @@
 //contains the database access functions
 var schemas = require("./schemas");
+var bcrypt = require('bcrypt-nodejs');
 
 //'async' specifies that the function is asynchronous
 //'await' will wait for the query to run so a promise is not needed
 async function getPlayer(name) {
-    return await schemas.Player.findOne({"name": name})
+    return await schemas.Player.findOne({ "name": name });
+}
+
+async function removePlayer(name) {
+    return await schemas.Player.deleteOne({ "name": name });
 }
 
 async function getBoard(query) {
@@ -15,14 +20,27 @@ async function getBoards() {
     return await schemas.Board.find();
 }
 
-async function setPlayer(name,colour) {
+async function removeBoard(id) {
+    await schemas.Board.deleteOne({_id: id});
+}
+
+async function getPlayerLogin(name, password) {
+    var user = await schemas.Player.findOne({ "name": name });
+    if (bcrypt.compareSync(password, user.password) === true)
+        return user;
+    else
+        return false;
+}
+
+async function setPlayer(name, password, colour) {
     var player = new schemas.Player({
         "name": name,
-        "colour":colour,
+        "colour": colour,
         clicks : 0 
     })
 
-    player.save();
+    player.password = bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+    await player.save();
     return player;
 }
 
@@ -33,6 +51,10 @@ async function getTop5Clickers() {
     ])
 }
 
+
+module.exports.getPlayerLogin = getPlayerLogin;
+module.exports.removePlayer = removePlayer;
+module.exports.removeBoard = removeBoard;
 module.exports.getTop5Clickers = getTop5Clickers;
 module.exports.setPlayer = setPlayer;
 module.exports.getBoards = getBoards;

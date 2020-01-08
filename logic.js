@@ -32,9 +32,15 @@ async function newGame() {
     });
     
     await game.save();
-    //console.log("saved");
-
     return game;
+}
+
+async function removeBoard(id) {
+    await db.removeBoard(id);
+}
+
+async function getBoard(query) {
+    return await db.getBoard(query)
 }
 
 async function saveLayout(gameId, layout) {
@@ -86,26 +92,65 @@ async function setClick(userId) {
     return user;
 }
 
+async function removePlayer(name) {
+    await db.removePlayer(name);
+}
+
 async function getColour(colour) {
     switch (colour) {
         case "red":
-            colour = "rgb(255, 0, 0)"
+            colour = "rgb(255, 0, 0)";
+            break;
         case "orange":
-            colour = "rgb(255,165,0)"
+            colour = "rgb(255,165,0)";
+            break;
         case "yellow":
-            colour = "rgb(255,255,0)"
+            colour = "rgb(255,255,0)";
+            break;
         case "green":
-            colour = "rgb(0,128,0)"
+            colour = "rgb(0,128,0)";
+            break;
         case "blue":
-            colour = "rgb(0,0,255)"
+            colour = "rgb(0,0,255)";
+            break;
         case "purple":
-            colour = "rgb(128,0,128)"
+            colour = "rgb(128,0,128)";
+            break;
     }
     return colour;
 }
 
-async function setPlayer(name, colour) {
-    return await db.setPlayer(name, colour);
+function checkUsernameRegEx(name) {
+    //Checks username for any other characters except for letters and numbers
+    //Return false if there are special characters or spaces
+    var valid = /^[a-zA-Z0-9]+$/g.test(name);
+    return valid;
+}
+
+async function checkUsernamePresent(name) {
+    var valid = await db.getPlayer(name);
+    if (valid === null)
+        return true;
+    else
+        return false;
+}
+
+async function setPlayer(name,password, colour) {
+    if (checkUsernameRegEx(name) === true && await checkUsernamePresent(name) === true) {
+
+        return await db.setPlayer(name, password, colour);
+    }
+    else
+        return false;
+}
+
+async function getPlayerLogin(name, password) {
+    var user = await db.getPlayerLogin(name, password);
+
+    if (user === true)
+        return user;
+    else
+        return false;
 }
 
 async function getPlayer(name) {
@@ -125,6 +170,10 @@ async function getOnlinePlayers(clients) {
     return onlinePlayers;
 }
 
+module.exports.getPlayerLogin = getPlayerLogin;
+module.exports.removePlayer = removePlayer;
+module.exports.removeBoard = removeBoard;
+module.exports.getBoard = getBoard;
 module.exports.getPlayer = getPlayer;
 module.exports.setPlayer = setPlayer;
 module.exports.getOnlinePlayers = getOnlinePlayers;

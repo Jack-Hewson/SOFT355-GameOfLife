@@ -155,7 +155,6 @@ gameModule.component("game", {
 
                 if ("layout" in eventObject) {
                     canvas = processCanvas(canvas, eventObject.layout);
-                    //console.log("Message from server: '" + eventObject._id + "'");
                     canvas.print(canvas.ctx, 25, 25, "#ffa500");
                     inputCanvas.initEmpty(gridRows, gridCol);
                     inputCanvas.print(inputCanvas.ctx, 25, 25, eventObject.colour);
@@ -163,7 +162,6 @@ gameModule.component("game", {
 
                 if ("id" in eventObject) {
                     userId = eventObject.id;
-                    console.log("User ID = " + eventObject.id);
                 }
 
                 if ("userLayout" in eventObject) {
@@ -244,6 +242,10 @@ gameModule.component("game", {
                             .append($('<br>'));
                     })
                 }
+
+                if ("failedPlayer" in eventObject) {
+                    console.log("FAILED CREATION");
+                }
             }
             catch (error) {
                 console.log("error " + error);
@@ -303,7 +305,8 @@ gameModule.component("game", {
 
             //get the submit button
             var submit = document.getElementById("submitPlayer");
-            
+            var signIn = document.getElementById("signInPlayer");
+
             modal.style.display = "block";
 
             //close the modal when close is clicked 
@@ -311,10 +314,25 @@ gameModule.component("game", {
                 modal.style.display = "none";
             }
 
+            signIn.onclick = function () {
+                var name = document.getElementsByName("playerName")[0].value;
+                var password = document.getElementsByName("playerPassword")[0].value;
+                try {
+                    $http.get("/signInPlayer/" + name + "/" + password + "/" + userId).then(function (response) {
+                        $("#onlinePlayers").text(response.data["name"]);
+                        $('#userId').css('color', response.data["colour"]).text(response.data["name"]);
+                        $('#userPlaceName').text(response.data["name"]);
+                        modal.style.display = "none";
+                    });
+                }
+                catch (error) {
+                    window.alert("Login not found");
+                }
+            }
+
             submit.onclick = function () {
                 var name = document.getElementsByName("playerName")[0].value;
-                
-                var username = document.getElementById("userId");
+                var password = document.getElementsByName("playerPassword")[0].value;
                 var colour;
 
                 $('#colourSelector input:radio').each(function (index) {
@@ -322,20 +340,19 @@ gameModule.component("game", {
                         colour = $(this)[0].id;
                 });
 
-                username.innerHTML = name;
-                username.style.color = colour;
+                $http.get("/newPlayer/" + name + "/" + colour + "/" + userId + "/" + password).then(function (response) {
+                    $("#onlinePlayers").html(response.data["success"]);
 
-                $('#userPlaceName').text(username.innerHTML);
+                    if (response.data["success"] === true) {
+                        modal.style.display = "none";
 
-                $http.get("/newPlayer/" + name + "/" + colour + "/" + userId).then(function (response) {
-                    $("#onlinePlayers").html(response.data["name"] + " - clicks: " + response.data["click"]);
-                })
-
-                socket.send(JSON.stringify({
-                    "TESTER":1
-                }))
-
-                modal.style.display = "none";
+                        $('#userId').css('color', colour).text(name);
+                        $('#userPlaceName').text(name);
+                       
+                    }
+                    else
+                        window.alert("Please no special characters or spaces in your name.\nOtherwise the name is already taken");
+                })                
             }
 
             //close the modal when the user clicks anywhere else

@@ -11,13 +11,22 @@ var port = 9000;
 
 var app = express();
 app.use(express.static("client"));
+// Initialise a HTTP server using the Express app.
+var server = http.createServer(app);
+// Initialise the web socket instance.
+var wss = new WebSocketServer({ httpServer: server });
+var connection;
+var clients = [];
+var id = 1;
+var i = 0;
+var currentTurn = 0;
 
 app.get("/", function (request, response) {
     response.status(200).sendFile("/", { root: "client" });
 });
 
 app.get("/initgame", async function (request, response) {
-    var boards = await db.getBoard({ "name": "public" });
+    var boards = await logic.getBoard({ "name": "public" });
     response.contentType("application/json");
     response.send({ "gameId": boards._id, "layout": boards.layout });
 })
@@ -36,36 +45,75 @@ app.get("/nextTurn/:gameId/:layout", async function (request, response) {
     response.send({ "gameId": board._id, "layout": board.layout });
 })
 
-app.get("/newPlayer/:name/:colour/:id", async function (request, response) {
+app.get("/signInPlayer/:name/:password/:userId", async function (request, response) {
     var name = request.params.name;
-    var userid = Number(request.params.id);
-    var colour = await logic.getColour(request.params.colour);
-    var player = await logic.setPlayer(name, colour);
+    var password = request.params.password;
+    var userid = Number(request.params.userId);
 
-    clients.forEach(function each(client) {
-        if (client.id === userid) {
-            client.username = name;
-        }
-    });
+    var user = await logic.getPlayerLogin(name, password);
+    var success;
 
-    var onlinePlayers = await logic.getOnlinePlayers(clients);
+    if (user === false) {
+        response.contentType("application/json");
+        response.send({ "success": success });
+    }
+    else {
+        clients.forEach(function each(client) {
+            if (client.id === userid) {
+                client.username = name;
+                console.log("clients  " + client.username);
+            }
+        });
+        var onlinePlayers = await logic.getOnlinePlayers(clients);
 
-    clients.forEach(function each(client) {
-        client.send(JSON.stringify({
-            onlinePlayers
-        }));
-    })
+        clients.forEach(function each(client) {
+            client.send(JSON.stringify({
+                onlinePlayers
+            }));
+        })
+        response.contentType("application/json");
+        response.send({ "name": user.name, "colour": user.colour, "clicks": user.clicks });
+    }
 })
 
-// Initialise a HTTP server using the Express app.
-var server = http.createServer(app);
-// Initialise the web socket instance.
-var wss = new WebSocketServer({ httpServer: server });
-var connection;
-var clients = [];
-var id = 1;
-var i = 0;
-var currentTurn = 0;
+app.get("/newPlayer/:name/:colour/:id/:password", async function (request, response) {
+    var name = request.params.name;
+    var password = request.params.password;
+    var userid = Number(request.params.id);
+    var colour = await logic.getColour(request.params.colour);
+    var player = await logic.setPlayer(name, password, colour);
+    var success;
+
+    if (player === false) {
+        success = false;
+        clients.forEach(function each(client) {
+            if (client.id === userid) {
+                client.send(JSON.stringify({
+                    "failedPlayer": 1
+                }))
+            }
+        });
+    }
+    else {
+        success = true;
+        clients.forEach(function each(client) {
+            if (client.id === userid) {
+                client.username = name;
+            }
+        });
+
+        var onlinePlayers = await logic.getOnlinePlayers(clients);
+
+        clients.forEach(function each(client) {
+            client.send(JSON.stringify({
+                onlinePlayers
+            }));
+        })
+    }
+
+    response.contentType("application/json");
+    response.send({ "success": success});
+})
 
 set = setInterval(function () {    
     try {

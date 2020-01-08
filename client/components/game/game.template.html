@@ -12,22 +12,22 @@
         <div id="leftSide">
             <div id="scoreContainer">
                 <div class="row">
-                    <div class="name" id="firstPlaceName">1st</div><div class="score" id="firstPlaceScore">100</div>
+                    <div class="name" id="firstPlaceName"></div><div class="score" id="firstPlaceScore">0</div>
                 </div>
                 <div class="row">
-                    <div class="name" id="secondPlaceName">2nd</div><div class="score" id="secondPlaceScore">99</div>
+                    <div class="name" id="secondPlaceName"></div><div class="score" id="secondPlaceScore">0</div>
                 </div>
                 <div class="row">
-                    <div class="name" id="thirdPlaceName">3rd</div><div class="score" id="thirdPlaceScore">98</div>
+                    <div class="name" id="thirdPlaceName"></div><div class="score" id="thirdPlaceScore">0</div>
                 </div>
                 <div class="row">
-                    <div class="name" id="fourthPlaceName">4th</div><div class="score" id="fourthPlaceScore">97</div>
+                    <div class="name" id="fourthPlaceName"></div><div class="score" id="fourthPlaceScore">0</div>
                 </div>
                 <div class="row">
-                    <div class="name" id="fifthPlaceName">5th</div><div class="score" id="fifthPlaceScore">96</div>
+                    <div class="name" id="fifthPlaceName"></div><div class="score" id="fifthPlaceScore">0</div>
                 </div>
                 <div class="row">
-                    <div class="name" id="userPlaceName">Jack</div><div class="score" id="userPlaceScore">50</div>
+                    <div class="name" id="userPlaceName"></div><div class="score" id="userPlaceScore">0</div>
                 </div>
             </div>
 
@@ -60,7 +60,8 @@
                 <form>
                     Enter Player Name:<br />
                     <input type="text" name="playerName" placeholder="Username" />
-
+                    <input type="password" name="playerPassword" placeholder="Password" />
+                    <input type="submit" id="signInPlayer" value="Sign in" />
                     <br /><br />Select Your Colour:<br />
 
                     <div id="colourSelector">
@@ -100,8 +101,8 @@
                             <span class="checkmark"></span>
                         </label>
                     </div>
-
-                    <input type="submit" id="submitPlayer" value="Submit" />
+                    <br />
+                    <input type="submit" id="submitPlayer" value="Register" />
                 </form>
             </div>
         </div>
