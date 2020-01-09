@@ -112,7 +112,7 @@ app.get("/newPlayer/:name/:colour/:id/:password", async function (request, respo
     response.contentType("application/json");
     response.send({ "success": success});
 })
-
+var set;
 //Timer created for how long each player has until their turn is over
 set = setInterval(function () {    
     try {

@@ -46,7 +46,7 @@ async function removeBoard(id) {
 //Retrieves the board with the specific query. "query" is used since sometimes
 //it is called by the board's name (e.g "public") or by its objectid
 async function getBoard(query) {
-    return await db.getBoard(query)
+    return await db.getBoard(query);
 }
 
 //Saves the layout of the board

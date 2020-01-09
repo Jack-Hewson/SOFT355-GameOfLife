@@ -435,7 +435,7 @@ gameModule.component("game", {
             var message = document.getElementsByName("message")[0].value;
 
             //Checks if the user has signed in, otherwise they shouldn't be able to send a message
-            if ($("#userId").text() !== "" && $("#userId").text() !== undefined && $("#userId").text() !== null) {
+            if ($("#userId").text() !== "" && $("#userId").text() !== undefined && $("#userId").text() !== null && $.trim(message).length !== 0) {
                 socket.send(JSON.stringify({
                     _id: $("#gameId").html(),
                     name: userId.innerHTML,
