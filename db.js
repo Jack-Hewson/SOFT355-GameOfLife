@@ -4,6 +4,7 @@ var bcrypt = require('bcrypt-nodejs');
 
 //'async' specifies that the function is asynchronous
 //'await' will wait for the query to run so a promise is not needed
+
 async function getPlayer(name) {
     return await schemas.Player.findOne({ "name": name });
 }
@@ -24,9 +25,11 @@ async function removeBoard(id) {
     await schemas.Board.deleteOne({_id: id});
 }
 
+//Retrieves the player and compares the user's password with the password the client provided
 async function getPlayerLogin(name, password) {
     var user = await schemas.Player.findOne({ "name": name });
     try {
+        //compares the stored encrypted password with the client's pasword
         if (bcrypt.compareSync(password, user.password) === true)
             return user;
     }
@@ -35,6 +38,7 @@ async function getPlayerLogin(name, password) {
     }        
 }
 
+//Adds the new player into the database and encrypts the password
 async function setPlayer(name, password, colour) {
     var player = new schemas.Player({
         "name": name,
@@ -47,10 +51,11 @@ async function setPlayer(name, password, colour) {
     return player;
 }
 
+//Retrieves the users in the database with the top 5 clicks
 async function getTop5Clickers() {
     return await schemas.Player.aggregate([
-        { $sort: {clicks:-1}},
-        {$limit: 5 }
+        {$sort: {clicks:-1}},
+        {$limit: 5}
     ])
 }
 

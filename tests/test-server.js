@@ -1,8 +1,6 @@
 var golServer = require("../golServer.js");
 var logic = require("../logic.js");
-var db = require("../db.js");
 var assert = require("chai").assert;
-var expect = require("chai").expect;
 var inputLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
