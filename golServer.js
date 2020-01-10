@@ -112,10 +112,11 @@ app.get("/newPlayer/:name/:colour/:id/:password", async function (request, respo
     response.contentType("application/json");
     response.send({ "success": success});
 })
-var set;
+var connect;
 //Timer created for how long each player has until their turn is over
-set = setInterval(function () {    
+set = setInterval(function () {
     try {
+        connect = false;
         i++;
         //Current counter and the current user is sent to all clients
         clients.forEach(function each(client) {
@@ -140,6 +141,16 @@ set = setInterval(function () {
                 while (clients[currentTurn].isConnected === false || clients[currentTurn].username === undefined) {
                     //If there is only 1 client connected then step out of this while-loop
                     if (clients.length === 1)
+                        break while1;
+
+                    //Checks if there are any players currently signed in
+                    //If no players signed in, there's no need to continue searching
+                    clients.forEach(function (client, i) {
+                        if (client.username !== undefined)
+                            connect = true;
+                    })
+
+                    if (connect === false)
                         break while1;
 
                     //Iterate until a connected user is found
