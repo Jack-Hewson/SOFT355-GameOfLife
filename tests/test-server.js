@@ -170,7 +170,7 @@ suite("Testing user functionality", function () {
         testName.forEach(async function each(name) {
             var testUser1 = await logic.setPlayer(name, "red");
 
-            assert(testUser1 === false, "RegEx check unsuccessful");
+            assert(testUser1 === false, "RegEx Check unsuccessful");
 
             if (testUser1 === true)
                 await logic.removePlayer(testName);
