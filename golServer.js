@@ -145,7 +145,7 @@ set = setInterval(function () {
 
                     //Checks if there are any players currently signed in
                     //If no players signed in, there's no need to continue searching
-                    clients.forEach(function (client, i) {
+                    clients.forEach(function (client) {
                         if (client.username !== undefined)
                             connect = true;
                     })
